@@ -6,7 +6,8 @@ export async function POST(req: Request) {
   const { secret } = await req.json();
 
   // Simple secret to prevent unauthorized access
-  if (secret !== process.env.SETUP_SECRET) {
+  const setupSecret = process.env.SETUP_SECRET || "firelife-setup-2026";
+  if (secret !== setupSecret) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
