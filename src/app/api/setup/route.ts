@@ -2,13 +2,16 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
-export async function POST(req: Request) {
-  const { secret } = await req.json();
-
-  // Simple secret to prevent unauthorized access
-  const setupSecret = process.env.SETUP_SECRET || "firelife-setup-2026";
-  if (secret !== setupSecret) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export async function POST() {
+  // Only allow setup if no admin user exists yet
+  const existingAdmin = await prisma.user.findFirst({
+    where: { role: "ADMIN" },
+  });
+  if (existingAdmin) {
+    return NextResponse.json(
+      { error: "Setup already completed" },
+      { status: 400 }
+    );
   }
 
   const hashedPassword = await bcrypt.hash("admin12345", 12);
