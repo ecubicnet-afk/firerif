@@ -8,6 +8,7 @@ const publicPaths = [
   "/register",
   "/api/auth",
   "/api/stripe/webhook",
+  "/api/setup",
 ];
 
 const adminPaths = ["/admin"];
@@ -24,6 +25,22 @@ const memberPaths = [
   "/community",
 ];
 
+// API routes that require authentication
+const protectedApiPaths = [
+  "/api/questions",
+  "/api/budget",
+  "/api/assets",
+  "/api/vision",
+  "/api/todos",
+  "/api/stripe/checkout",
+  "/api/stripe/portal",
+];
+
+// API routes that require admin role
+const adminApiPaths = [
+  "/api/admin",
+];
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -32,12 +49,41 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Allow API routes that need auth to handle their own auth
-  if (pathname.startsWith("/api/")) {
+  // Allow static assets
+  if (
+    pathname.startsWith("/_next/") ||
+    pathname.startsWith("/images/") ||
+    pathname === "/favicon.ico"
+  ) {
     return NextResponse.next();
   }
 
   const token = await getToken({ req: request });
+
+  // Protected API routes - return 401 instead of redirect
+  if (pathname.startsWith("/api/")) {
+    // Admin API routes
+    if (adminApiPaths.some((p) => pathname.startsWith(p))) {
+      if (!token) {
+        return NextResponse.json({ error: "未認証" }, { status: 401 });
+      }
+      if (token.role !== "ADMIN") {
+        return NextResponse.json({ error: "権限がありません" }, { status: 403 });
+      }
+      return NextResponse.next();
+    }
+
+    // Protected member API routes
+    if (protectedApiPaths.some((p) => pathname.startsWith(p))) {
+      if (!token) {
+        return NextResponse.json({ error: "未認証" }, { status: 401 });
+      }
+      return NextResponse.next();
+    }
+
+    // Unknown API routes - block by default
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
 
   // No token → redirect to login
   if (!token) {
