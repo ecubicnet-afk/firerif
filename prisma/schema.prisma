@@ -157,6 +157,7 @@ model BudgetTemplate {
   type      BudgetType
   day       Int        @default(1)
   memo      String?
+  endDate   DateTime?
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 

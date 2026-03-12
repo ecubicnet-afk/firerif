@@ -6,8 +6,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatYen } from "@/lib/utils";
 import { FIXED_COST_CATEGORIES } from "@/lib/budget-categories";
-import { Trash2, RefreshCw, Pencil, ChevronDown } from "lucide-react";
+import { Trash2, RefreshCw, Pencil } from "lucide-react";
 import type { MergedEntry } from "@/hooks/use-budget";
+
+function formatEndDate(endDate: string | null | undefined, currentYear: number, currentMonth: number): string | null {
+  if (!endDate) return null;
+  const d = new Date(endDate);
+  const endY = d.getFullYear();
+  const endM = d.getMonth() + 1;
+  const remaining = (endY - currentYear) * 12 + (endM - currentMonth);
+  const label = `〜${endY}年${endM}月`;
+  if (remaining > 0) return `${label} (残り${remaining}回)`;
+  if (remaining === 0) return `${label} (今月で完了)`;
+  return `${label} (期限超過)`;
+}
 
 interface Props {
   year: number;
@@ -23,7 +35,7 @@ interface Props {
   onAddTemplate: (data: {
     category: string; amount: number;
     type: "INCOME" | "EXPENSE" | "SAVING";
-    day?: number; memo?: string;
+    day?: number; memo?: string; endDate?: string | null;
   }) => Promise<void>;
   onDeleteTemplate: (id: string) => Promise<void>;
 }
@@ -33,6 +45,7 @@ export function FixedCosts({ year, month, mergedEntries, onAddEntry, onDeleteEnt
   const [editAmount, setEditAmount] = useState("");
   const [editDay, setEditDay] = useState("");
   const [editMemo, setEditMemo] = useState("");
+  const [editEndDate, setEditEndDate] = useState("");
   const [saving, setSaving] = useState(false);
 
   // Group merged entries by category
@@ -49,6 +62,12 @@ export function FixedCosts({ year, month, mergedEntries, onAddEntry, onDeleteEnt
     setEditAmount(entry ? String(entry.amount) : "");
     setEditDay(entry ? String(entry.day) : "1");
     setEditMemo(entry?.memo || "");
+    if (entry?.endDate) {
+      const d = new Date(entry.endDate);
+      setEditEndDate(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+    } else {
+      setEditEndDate("");
+    }
   }
 
   function cancelEdit() {
@@ -56,6 +75,7 @@ export function FixedCosts({ year, month, mergedEntries, onAddEntry, onDeleteEnt
     setEditAmount("");
     setEditDay("");
     setEditMemo("");
+    setEditEndDate("");
   }
 
   async function handleSaveTemplate(category: string) {
@@ -68,6 +88,7 @@ export function FixedCosts({ year, month, mergedEntries, onAddEntry, onDeleteEnt
         type: "EXPENSE",
         day: parseInt(editDay) || 1,
         memo: editMemo || undefined,
+        endDate: editEndDate ? `${editEndDate}-01` : null,
       });
       cancelEdit();
     } finally {
@@ -128,9 +149,14 @@ export function FixedCosts({ year, month, mergedEntries, onAddEntry, onDeleteEnt
                     {hasEntry ? (
                       <div className="flex items-center gap-2 text-xs">
                         {catEntries.map((e, i) => (
-                          <div key={i} className="flex items-center gap-1">
+                          <div key={i} className="flex items-center gap-1 flex-wrap">
                             <span className="font-bold">{formatYen(e.amount)}</span>
                             {e.memo && <span className="text-muted-foreground">{e.memo}</span>}
+                            {e.endDate && (
+                              <span className="text-[10px] text-green-600 bg-green-50 px-1 rounded">
+                                {formatEndDate(e.endDate, year, month)}
+                              </span>
+                            )}
                             {e.source === "template" ? (
                               <span className="text-[10px] text-blue-500 bg-blue-50 px-1 rounded">毎月</span>
                             ) : (
@@ -158,7 +184,7 @@ export function FixedCosts({ year, month, mergedEntries, onAddEntry, onDeleteEnt
                 {/* Edit panel */}
                 {isEditing && (
                   <div className="bg-muted/20 px-3 py-2 mb-1 rounded space-y-2">
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className={`grid gap-2 ${cat === "ローン返済" ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-3"}`}>
                       <div>
                         <label className="text-[10px] text-muted-foreground">金額（円）</label>
                         <Input
@@ -186,10 +212,21 @@ export function FixedCosts({ year, month, mergedEntries, onAddEntry, onDeleteEnt
                         <Input
                           value={editMemo}
                           onChange={(e) => setEditMemo(e.target.value)}
-                          placeholder="任意"
+                          placeholder={cat === "ローン返済" ? "住宅ローン等" : "任意"}
                           className="h-7 text-xs"
                         />
                       </div>
+                      {cat === "ローン返済" && (
+                        <div>
+                          <label className="text-[10px] text-muted-foreground">返済期限（任意）</label>
+                          <Input
+                            type="month"
+                            value={editEndDate}
+                            onChange={(e) => setEditEndDate(e.target.value)}
+                            className="h-7 text-xs"
+                          />
+                        </div>
+                      )}
                     </div>
                     <div className="flex gap-1.5 flex-wrap">
                       <Button
