@@ -19,6 +19,7 @@ model User {
   subscription  Subscription?
   questions     Question[]
   budgetEntries BudgetEntry[]
+  budgetPlans   BudgetPlan[]
   assets        Asset[]
   visionItems   VisionItem[]
   todos         Todo[]
@@ -116,10 +117,27 @@ model BudgetEntry {
   amount    Int
   type      BudgetType
   memo      String?
+  imageData String?
   createdAt DateTime   @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId, year, month])
+}
+
+model BudgetPlan {
+  id        String   @id @default(cuid())
+  userId    String
+  year      Int
+  month     Int
+  category  String
+  amount    Int
+  type      BudgetType
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, year, month, category, type])
   @@index([userId, year, month])
 }
 
