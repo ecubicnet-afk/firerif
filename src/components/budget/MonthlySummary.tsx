@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +15,7 @@ import {
 } from "@/lib/budget-categories";
 import type { ExpenseGroup } from "@/lib/budget-categories";
 import type { BudgetEntry } from "@/hooks/use-budget";
-import { ImageIcon, X, ChevronDown, Trash2 } from "lucide-react";
+import { ImageIcon, X, ChevronDown, Trash2, Check } from "lucide-react";
 
 type ExpenseSubGroup = "生活費" | "固定費" | "特別出費";
 
@@ -55,6 +55,22 @@ const EXPENSE_COLORS = [
   "#a855f7", "#6366f1", "#84cc16",
 ];
 
+// Safely evaluate arithmetic expression (only numbers and +-*/ and parentheses)
+function evaluateExpression(expr: string): number | null {
+  const cleaned = expr.replace(/\s/g, "");
+  if (!cleaned) return null;
+  // Only allow digits, +, -, *, /, (, ), and decimal points
+  if (!/^[\d+\-*/.()]+$/.test(cleaned)) return null;
+  try {
+    // Use Function constructor to evaluate safely
+    const result = new Function("return (" + cleaned + ")")();
+    if (typeof result !== "number" || !isFinite(result)) return null;
+    return Math.round(result);
+  } catch {
+    return null;
+  }
+}
+
 export function MonthlySummary({ totals, expenseByCategory, year, month, entries, onAddEntry, onDeleteEntry }: Props) {
   // Form state
   const [subGroup, setSubGroup] = useState<ExpenseSubGroup>("生活費");
@@ -63,7 +79,10 @@ export function MonthlySummary({ totals, expenseByCategory, year, month, entries
   const [memo, setMemo] = useState("");
   const [image, setImage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [showAllRecords, setShowAllRecords] = useState(false);
+  const savedTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const today = new Date();
   const [formDate, setFormDate] = useState(
@@ -72,6 +91,10 @@ export function MonthlySummary({ totals, expenseByCategory, year, month, entries
 
   // Current categories based on subgroup
   const currentCats = EXPENSE_SUBGROUPS.find(g => g.key === subGroup)?.cats || [];
+
+  // Evaluate amount expression for preview
+  const evaluatedAmount = evaluateExpression(amount);
+  const isExpression = amount.includes("+") || amount.includes("-") || amount.includes("*");
 
   // Recent expense entries (descending by day, then by createdAt)
   const recentExpenses = useMemo(() => {
@@ -96,14 +119,31 @@ export function MonthlySummary({ totals, expenseByCategory, year, month, entries
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!category || !amount || saving) return;
+    if (saving) return;
+
+    // Validation
+    if (!category) {
+      setError("カテゴリを選択してください");
+      return;
+    }
+    if (!amount) {
+      setError("金額を入力してください");
+      return;
+    }
+    const parsedAmount = evaluateExpression(amount);
+    if (parsedAmount === null || parsedAmount <= 0) {
+      setError("正しい金額を入力してください");
+      return;
+    }
+
+    setError(null);
     setSaving(true);
     try {
       const parts = formDate.split("-").map(Number);
       await onAddEntry({
         year: parts[0], month: parts[1], day: parts[2],
         category,
-        amount: parseInt(amount),
+        amount: parsedAmount,
         type: "EXPENSE",
         memo: memo || undefined,
         imageData: image,
@@ -113,6 +153,10 @@ export function MonthlySummary({ totals, expenseByCategory, year, month, entries
       setAmount("");
       setMemo("");
       setImage(null);
+      // Show saved feedback
+      setSaved(true);
+      if (savedTimer.current) clearTimeout(savedTimer.current);
+      savedTimer.current = setTimeout(() => setSaved(false), 1500);
     } finally {
       setSaving(false);
     }
@@ -220,7 +264,7 @@ export function MonthlySummary({ totals, expenseByCategory, year, month, entries
                   key={g.key}
                   variant={subGroup === g.key ? "default" : "outline"}
                   className="cursor-pointer text-xs"
-                  onClick={() => { setSubGroup(g.key); setCategory(""); }}
+                  onClick={() => { setSubGroup(g.key); setCategory(""); setError(null); }}
                 >
                   {g.key}
                 </Badge>
@@ -233,7 +277,7 @@ export function MonthlySummary({ totals, expenseByCategory, year, month, entries
                 <Button key={cat} type="button" size="sm"
                   variant={category === cat ? "default" : "outline"}
                   className="text-xs h-7"
-                  onClick={() => setCategory(cat)}>
+                  onClick={() => { setCategory(cat); setError(null); }}>
                   {cat}
                 </Button>
               ))}
@@ -249,9 +293,19 @@ export function MonthlySummary({ totals, expenseByCategory, year, month, entries
               </div>
               <div>
                 <Label className="text-[10px]">金額（円）</Label>
-                <Input type="number" placeholder="0" value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  className="h-8 text-xs" required />
+                <Input
+                  type="text"
+                  inputMode="decimal"
+                  placeholder="0"
+                  value={amount}
+                  onChange={(e) => { setAmount(e.target.value); setError(null); }}
+                  className="h-8 text-xs"
+                />
+                {isExpression && evaluatedAmount !== null && (
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                    = {evaluatedAmount.toLocaleString()}円
+                  </p>
+                )}
               </div>
             </div>
 
@@ -283,9 +337,20 @@ export function MonthlySummary({ totals, expenseByCategory, year, month, entries
               </div>
             )}
 
+            {/* Error message */}
+            {error && (
+              <p className="text-xs text-red-500">{error}</p>
+            )}
+
             {/* Submit */}
-            <Button type="submit" className="w-full" disabled={saving || !category || !amount}>
-              {saving ? "保存中..." : "保存する"}
+            <Button
+              type="submit"
+              className={`w-full transition-colors ${saved ? "bg-green-600 hover:bg-green-600" : ""}`}
+              disabled={saving}
+            >
+              {saving ? "保存中..." : saved ? (
+                <span className="flex items-center gap-1"><Check className="h-4 w-4" /> 保存しました</span>
+              ) : "保存する"}
             </Button>
           </form>
         </CardContent>

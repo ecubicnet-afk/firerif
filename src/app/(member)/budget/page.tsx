@@ -112,7 +112,6 @@ export default function BudgetPage() {
           year={year}
           month={month}
           entries={entries}
-          onAddEntry={addEntry}
           onDeleteEntry={deleteEntry}
         />
       )}
