@@ -144,16 +144,16 @@ export default function BudgetPage() {
 
       {/* Dream Unlocker banner */}
       <Link href="/budget/dream">
-        <Card className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-purple-200 hover:border-purple-300 transition-colors cursor-pointer">
-          <CardContent className="flex items-center gap-3 p-4">
-            <Sparkles className="h-5 w-5 text-purple-500 shrink-0" />
+        <Card className="border-primary/30 hover:border-primary hover:shadow-md transition-all cursor-pointer bg-gradient-to-r from-amber-50 to-orange-50">
+          <CardContent className="flex items-center gap-4 p-4">
+            <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+              <Sparkles className="h-5 w-5 text-amber-600" />
+            </div>
             <div className="flex-1">
               <p className="font-bold text-sm">ドリーム・アンロッカー</p>
-              <p className="text-xs text-muted-foreground">
-                節約をスタンプで記録して、夢の画像をアンロックしよう！
-              </p>
+              <p className="text-xs text-muted-foreground">節約を未来の資産に変換！夢の写真がクリアになる</p>
             </div>
-            <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+            <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
           </CardContent>
         </Card>
       </Link>
