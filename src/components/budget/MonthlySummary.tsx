@@ -13,9 +13,10 @@ import {
   LIVING_EXPENSE_CATEGORIES,
   FIXED_COST_CATEGORIES,
   SPECIAL_EXPENSE_CATEGORIES,
+  SAVING_CATEGORIES,
 } from "@/lib/budget-categories";
 import type { ExpenseGroup } from "@/lib/budget-categories";
-import type { BudgetEntry, BudgetPlan } from "@/hooks/use-budget";
+import type { BudgetEntry, BudgetPlan, MergedEntry } from "@/hooks/use-budget";
 import { BudgetProgressBar } from "./BudgetProgressBar";
 import { ImageIcon, X, ChevronDown, Trash2, Check } from "lucide-react";
 
@@ -50,6 +51,8 @@ interface Props {
     imageData?: string | null;
   }) => Promise<void>;
   onDeleteEntry: (id: string) => Promise<void>;
+  mergedFixedCosts?: MergedEntry[];
+  mergedSavings?: MergedEntry[];
 }
 
 const EXPENSE_COLORS = [
@@ -60,7 +63,7 @@ const EXPENSE_COLORS = [
 
 // evaluateExpression imported from @/lib/budget-utils
 
-export function MonthlySummary({ totals, expenseByCategory, year, month, plans, entries, onAddEntry, onDeleteEntry }: Props) {
+export function MonthlySummary({ totals, expenseByCategory, year, month, plans, entries, onAddEntry, onDeleteEntry, mergedFixedCosts, mergedSavings }: Props) {
   // Form state
   const [subGroup, setSubGroup] = useState<ExpenseSubGroup>("変動費");
   const [category, setCategory] = useState("");
@@ -187,16 +190,44 @@ export function MonthlySummary({ totals, expenseByCategory, year, month, plans, 
       {(() => {
         const PLAN_CATS = new Set(["ベース収支目標", "変動費削減目標", "固定費削減目標"]);
         const budgetPlans = plans.filter(p => p.type === "EXPENSE" && !PLAN_CATS.has(p.category));
-        if (budgetPlans.length === 0) return null;
 
-        // Calculate group budgets
+        // 変動費予算: 明示的プランのみ
         const livingBudget = budgetPlans
           .filter(p => LIVING_EXPENSE_CATEGORIES.includes(p.category as typeof LIVING_EXPENSE_CATEGORIES[number]))
           .reduce((s, p) => s + p.amount, 0);
-        const fixedBudget = budgetPlans
-          .filter(p => FIXED_COST_CATEGORIES.includes(p.category as typeof FIXED_COST_CATEGORIES[number]))
-          .reduce((s, p) => s + p.amount, 0);
-        const totalBudget = budgetPlans.reduce((s, p) => s + p.amount, 0);
+
+        // 固定費予算: プラン + テンプレートフォールバック
+        let fixedBudget = 0;
+        for (const cat of FIXED_COST_CATEGORIES) {
+          const plan = budgetPlans.find(p => p.category === cat);
+          if (plan) {
+            fixedBudget += plan.amount;
+          } else {
+            const templateTotal = (mergedFixedCosts || [])
+              .filter(m => m.category === cat && m.source === "template")
+              .reduce((s, m) => s + m.amount, 0);
+            fixedBudget += templateTotal;
+          }
+        }
+
+        // 貯蓄予算: プラン + テンプレートフォールバック
+        let savingBudget = 0;
+        for (const cat of SAVING_CATEGORIES) {
+          const plan = plans.find(p => p.type === "SAVING" && p.category === cat);
+          if (plan) {
+            savingBudget += plan.amount;
+          } else {
+            const templateTotal = (mergedSavings || [])
+              .filter(m => m.category === cat && m.source === "template")
+              .reduce((s, m) => s + m.amount, 0);
+            savingBudget += templateTotal;
+          }
+        }
+
+        // 全体 = 変動費 + 固定費 + 貯蓄
+        const totalBudget = livingBudget + fixedBudget + savingBudget;
+
+        if (totalBudget === 0) return null;
 
         return (
           <Card>
@@ -216,10 +247,16 @@ export function MonthlySummary({ totals, expenseByCategory, year, month, plans, 
                   <BudgetProgressBar spent={totals.fixedCost} budget={fixedBudget} size="sm" />
                 </div>
               )}
+              {savingBudget > 0 && (
+                <div>
+                  <p className="text-xs font-medium text-green-600 mb-1">貯蓄</p>
+                  <BudgetProgressBar spent={totals.saving} budget={savingBudget} size="sm" />
+                </div>
+              )}
               {totalBudget > 0 && (
                 <div className="pt-2 border-t">
                   <p className="text-xs font-medium mb-1">全体</p>
-                  <BudgetProgressBar spent={totals.expense} budget={totalBudget} />
+                  <BudgetProgressBar spent={totals.expense + totals.saving} budget={totalBudget} />
                 </div>
               )}
             </CardContent>
