@@ -8,7 +8,14 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { formatYen } from "@/lib/utils";
 import { Plus, Trash2, ChevronLeft, ChevronRight, Wallet, Sparkles } from "lucide-react";
-import Link from "next/link";
+import { useSavings } from "@/hooks/use-savings";
+import { useDream } from "@/hooks/use-dream";
+import { useStamps } from "@/hooks/use-stamps";
+import { usePreferences } from "@/hooks/use-preferences";
+import { DreamView } from "@/components/dream/DreamView";
+import { StampPad } from "@/components/dream/StampPad";
+import { Ledger } from "@/components/dream/Ledger";
+import { StampEditor } from "@/components/dream/StampEditor";
 
 interface BudgetEntry {
   id: string;
@@ -57,6 +64,13 @@ export default function BudgetPage() {
   const [formAmount, setFormAmount] = useState("");
   const [formMemo, setFormMemo] = useState("");
   const [loading, setLoading] = useState(false);
+  const [stampEditorOpen, setStampEditorOpen] = useState(false);
+
+  // Dream hooks
+  const { entries: dreamEntries, addEntry: addDreamEntry, deleteEntry: deleteDreamEntry, loading: savingsLoading } = useSavings();
+  const { dream, saveDream, loading: dreamLoading } = useDream();
+  const { stamps, addStamp, updateStamp, deleteStamp, resetDefaults, loading: stampsLoading } = useStamps();
+  const { courseId, viewMode, setCourse, setViewMode } = usePreferences();
 
   const fetchEntries = useCallback(async () => {
     const res = await fetch(`/api/budget?year=${year}&month=${month}`);
@@ -133,30 +147,16 @@ export default function BudgetPage() {
     .reduce((sum, e) => sum + e.amount, 0);
   const balance = totalIncome - totalExpense - totalSaving;
 
+  const isDreamLoading = savingsLoading || dreamLoading || stampsLoading;
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">家計簿</h1>
+        <h1 className="text-2xl font-bold">家計簿と節約ドリーム</h1>
         <p className="text-muted-foreground mt-1">
           毎月の収支を記録してFIREへの進捗を確認しましょう
         </p>
       </div>
-
-      {/* Dream Unlocker banner */}
-      <Link href="/budget/dream">
-        <Card className="border-primary/30 hover:border-primary hover:shadow-md transition-all cursor-pointer bg-gradient-to-r from-amber-50 to-orange-50">
-          <CardContent className="flex items-center gap-4 p-4">
-            <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
-              <Sparkles className="h-5 w-5 text-amber-600" />
-            </div>
-            <div className="flex-1">
-              <p className="font-bold text-sm">ドリーム・アンロッカー</p>
-              <p className="text-xs text-muted-foreground">節約を未来の資産に変換！夢の写真がクリアになる</p>
-            </div>
-            <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
-          </CardContent>
-        </Card>
-      </Link>
 
       {/* Month selector */}
       <div className="flex items-center justify-center gap-4">
@@ -328,6 +328,63 @@ export default function BudgetPage() {
           </p>
         )}
       </div>
+
+      {/* 節約ドリーム section */}
+      <div className="border-t pt-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Sparkles className="h-5 w-5 text-primary" />
+          <h2 className="text-xl font-bold">節約ドリーム</h2>
+        </div>
+        <p className="text-muted-foreground text-sm mb-6">
+          今日の節約が、20年後の夢のチケットに変わる
+        </p>
+
+        {isDreamLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center space-y-3">
+              <Sparkles className="h-8 w-8 text-primary mx-auto animate-pulse" />
+              <p className="text-sm text-muted-foreground">読み込み中...</p>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            <DreamView
+              dream={dream}
+              entries={dreamEntries}
+              courseId={courseId}
+              onSaveDream={saveDream}
+            />
+
+            <StampPad
+              stamps={stamps}
+              courseId={courseId}
+              onSave={addDreamEntry}
+              onEditStamps={() => setStampEditorOpen(true)}
+            />
+
+            <Ledger
+              entries={dreamEntries}
+              courseId={courseId}
+              viewMode={viewMode}
+              onCourseChange={setCourse}
+              onViewModeChange={setViewMode}
+              onDeleteEntry={deleteDreamEntry}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Stamp Editor Modal */}
+      {stampEditorOpen && (
+        <StampEditor
+          stamps={stamps}
+          onUpdate={updateStamp}
+          onAdd={addStamp}
+          onDelete={deleteStamp}
+          onResetDefaults={resetDefaults}
+          onClose={() => setStampEditorOpen(false)}
+        />
+      )}
     </div>
   );
 }
