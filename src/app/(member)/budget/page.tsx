@@ -12,7 +12,6 @@ import { ThreeStepPlan } from "@/components/budget/ThreeStepPlan";
 import { QuickEntry } from "@/components/budget/QuickEntry";
 import { Button } from "@/components/ui/button";
 import { Plus, Wallet, Loader2 } from "lucide-react";
-import { getExpenseGroup } from "@/lib/budget-categories";
 
 type Tab = "overview" | "weekly" | "fixed" | "income" | "plan";
 
@@ -32,6 +31,8 @@ export default function BudgetPage() {
     year, month, prevMonth, nextMonth,
     entries, plans, loading,
     addEntry, deleteEntry, addPlan,
+    addTemplate, deleteTemplate,
+    mergedFixedCosts, mergedIncome, mergedSavings,
     totals, expenseByCategory, weeklyGroups,
   } = useBudget();
 
@@ -111,8 +112,11 @@ export default function BudgetPage() {
         <FixedCosts
           year={year}
           month={month}
-          entries={entries}
+          mergedEntries={mergedFixedCosts}
+          onAddEntry={addEntry}
           onDeleteEntry={deleteEntry}
+          onAddTemplate={addTemplate}
+          onDeleteTemplate={deleteTemplate}
         />
       )}
 
@@ -120,9 +124,12 @@ export default function BudgetPage() {
         <IncomeAndSavings
           year={year}
           month={month}
-          entries={entries}
+          mergedIncome={mergedIncome}
+          mergedSavings={mergedSavings}
           onAddEntry={addEntry}
           onDeleteEntry={deleteEntry}
+          onAddTemplate={addTemplate}
+          onDeleteTemplate={deleteTemplate}
         />
       )}
 
