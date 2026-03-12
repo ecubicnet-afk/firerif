@@ -79,7 +79,15 @@ export default function BudgetPage() {
 
       {/* Tab content */}
       {tab === "overview" && (
-        <MonthlySummary totals={totals} expenseByCategory={expenseByCategory} />
+        <MonthlySummary
+          totals={totals}
+          expenseByCategory={expenseByCategory}
+          year={year}
+          month={month}
+          entries={entries}
+          onAddEntry={addEntry}
+          onDeleteEntry={deleteEntry}
+        />
       )}
 
       {tab === "weekly" && (
