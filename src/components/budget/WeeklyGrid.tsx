@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { formatYen } from "@/lib/utils";
 import { LIVING_EXPENSE_CATEGORIES, getExpenseGroup } from "@/lib/budget-categories";
 import type { BudgetEntry } from "@/hooks/use-budget";
@@ -20,12 +19,6 @@ interface Props {
   year: number;
   month: number;
   weeklyGroups: WeekGroup[];
-  onAddEntry: (data: {
-    year: number; month: number; day: number;
-    category: string; amount: number;
-    type: "INCOME" | "EXPENSE" | "SAVING";
-    memo?: string;
-  }) => Promise<void>;
 }
 
 // Short labels for mobile
@@ -44,35 +37,20 @@ const SHORT_LABELS: Record<string, string> = {
 
 const DAYS_JP = ["日", "月", "火", "水", "木", "金", "土"];
 
-export function WeeklyGrid({ year, month, weeklyGroups, onAddEntry }: Props) {
-  const [editCell, setEditCell] = useState<{ day: number; category: string } | null>(null);
-  const [editAmount, setEditAmount] = useState("");
-  const [saving, setSaving] = useState(false);
+export function WeeklyGrid({ year, month, weeklyGroups }: Props) {
+  const [selectedCell, setSelectedCell] = useState<{ day: number; category: string } | null>(null);
 
   // Get categories that have data or are commonly used
   const activeCats = LIVING_EXPENSE_CATEGORIES.slice(0, 8); // Show first 8 for width
 
-  async function handleSave() {
-    if (!editCell || !editAmount || saving) return;
-    setSaving(true);
-    try {
-      await onAddEntry({
-        year, month,
-        day: editCell.day,
-        category: editCell.category,
-        amount: parseInt(editAmount),
-        type: "EXPENSE",
-      });
-      setEditCell(null);
-      setEditAmount("");
-    } finally {
-      setSaving(false);
+  function handleCellClick(day: number, category: string, hasData: boolean) {
+    if (!hasData) return;
+    // Toggle: click same cell again to close
+    if (selectedCell?.day === day && selectedCell?.category === category) {
+      setSelectedCell(null);
+    } else {
+      setSelectedCell({ day, category });
     }
-  }
-
-  function handleCellClick(day: number, category: string) {
-    setEditCell({ day, category });
-    setEditAmount("");
   }
 
   return (
@@ -109,6 +87,15 @@ export function WeeklyGrid({ year, month, weeklyGroups, onAddEntry }: Props) {
           weekTotal += entry.amount;
         }
 
+        // Get entries for selected cell detail
+        const selectedEntries = selectedCell
+          ? livingEntries.filter(
+              e => e.day === selectedCell.day && e.category === selectedCell.category
+            )
+          : [];
+
+        const totalColumns = activeCats.length + 2; // date + cats + subtotal
+
         return (
           <Card key={wi}>
             <CardHeader className="pb-2 px-3">
@@ -137,50 +124,77 @@ export function WeeklyGrid({ year, month, weeklyGroups, onAddEntry }: Props) {
                       const isWeekend = date.getDay() === 0 || date.getDay() === 6;
                       const rowData = dayData[day] || {};
                       const dayTotal = Object.values(rowData).reduce((s, v) => s + v, 0);
+                      const isSelectedDay = selectedCell?.day === day;
 
                       return (
-                        <tr key={day} className="border-b border-dashed hover:bg-muted/20">
-                          <td className={`sticky left-0 bg-background px-2 py-1.5 font-medium ${isWeekend ? "text-red-500" : ""}`}>
-                            {day}({dow})
-                          </td>
-                          {activeCats.map(cat => {
-                            const val = rowData[cat];
-                            const isEditing = editCell?.day === day && editCell?.category === cat;
-                            return (
-                              <td
-                                key={cat}
-                                className="px-1 py-1 text-center cursor-pointer hover:bg-primary/10 transition-colors"
-                                onClick={() => handleCellClick(day, cat)}
-                              >
-                                {isEditing ? (
-                                  <div className="flex items-center gap-0.5">
-                                    <Input
-                                      type="number"
-                                      value={editAmount}
-                                      onChange={(e) => setEditAmount(e.target.value)}
-                                      onKeyDown={(e) => {
-                                        if (e.key === "Enter") handleSave();
-                                        if (e.key === "Escape") setEditCell(null);
-                                      }}
-                                      className="h-6 w-14 text-xs px-1 text-center"
-                                      autoFocus
-                                    />
-                                    <Button size="icon" variant="ghost" className="h-5 w-5 shrink-0" onClick={() => setEditCell(null)}>
+                        <>
+                          <tr key={day} className="border-b border-dashed hover:bg-muted/20">
+                            <td className={`sticky left-0 bg-background px-2 py-1.5 font-medium ${isWeekend ? "text-red-500" : ""}`}>
+                              {day}({dow})
+                            </td>
+                            {activeCats.map(cat => {
+                              const val = rowData[cat];
+                              const isSelected = selectedCell?.day === day && selectedCell?.category === cat;
+                              return (
+                                <td
+                                  key={cat}
+                                  className={`px-1 py-1 text-center transition-colors ${
+                                    val
+                                      ? "cursor-pointer hover:bg-primary/10"
+                                      : ""
+                                  } ${isSelected ? "bg-primary/15 ring-1 ring-primary/30 rounded" : ""}`}
+                                  onClick={() => handleCellClick(day, cat, !!val)}
+                                >
+                                  {val ? (
+                                    <span className="text-foreground">{val.toLocaleString()}</span>
+                                  ) : (
+                                    <span className="text-muted-foreground/30">-</span>
+                                  )}
+                                </td>
+                              );
+                            })}
+                            <td className="px-2 py-1.5 text-right font-bold">
+                              {dayTotal > 0 ? dayTotal.toLocaleString() : ""}
+                            </td>
+                          </tr>
+                          {/* Detail panel row */}
+                          {isSelectedDay && selectedCell && selectedEntries.length > 0 && (
+                            <tr key={`detail-${day}`} className="border-b">
+                              <td colSpan={totalColumns} className="p-0">
+                                <div className="bg-muted/20 px-3 py-2 space-y-1.5">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-xs font-medium">
+                                      {selectedCell.category}の詳細 ({month}/{day})
+                                    </span>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-5 w-5"
+                                      onClick={() => setSelectedCell(null)}
+                                    >
                                       <X className="h-3 w-3" />
                                     </Button>
                                   </div>
-                                ) : val ? (
-                                  <span className="text-foreground">{val.toLocaleString()}</span>
-                                ) : (
-                                  <span className="text-muted-foreground/30">-</span>
-                                )}
+                                  {selectedEntries.map(entry => (
+                                    <div key={entry.id} className="flex items-center gap-2 text-xs py-1 border-t border-dashed">
+                                      <span className="font-bold text-red-600">{formatYen(entry.amount)}</span>
+                                      {entry.memo && (
+                                        <span className="text-muted-foreground">{entry.memo}</span>
+                                      )}
+                                      {entry.imageData && (
+                                        <img
+                                          src={entry.imageData}
+                                          alt=""
+                                          className="h-8 w-8 object-cover rounded shrink-0"
+                                        />
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
                               </td>
-                            );
-                          })}
-                          <td className="px-2 py-1.5 text-right font-bold">
-                            {dayTotal > 0 ? dayTotal.toLocaleString() : ""}
-                          </td>
-                        </tr>
+                            </tr>
+                          )}
+                        </>
                       );
                     })}
                     {/* Week total row */}
@@ -203,7 +217,7 @@ export function WeeklyGrid({ year, month, weeklyGroups, onAddEntry }: Props) {
 
       {weeklyGroups.length === 0 && (
         <p className="text-sm text-muted-foreground text-center py-8">
-          セルをタップして生活費を入力してください
+          概要タブから支出を記録すると、ここに自動で表示されます
         </p>
       )}
     </div>

@@ -96,7 +96,6 @@ export default function BudgetPage() {
             year={year}
             month={month}
             weeklyGroups={weeklyGroups}
-            onAddEntry={addEntry}
           />
           <SpecialExpenses
             year={year}
