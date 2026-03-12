@@ -9,17 +9,19 @@ import { FixedCosts } from "@/components/budget/FixedCosts";
 import { SpecialExpenses } from "@/components/budget/SpecialExpenses";
 import { IncomeAndSavings } from "@/components/budget/IncomeAndSavings";
 import { ThreeStepPlan } from "@/components/budget/ThreeStepPlan";
+import { BudgetTab } from "@/components/budget/BudgetTab";
 import { QuickEntry } from "@/components/budget/QuickEntry";
 import { Button } from "@/components/ui/button";
 import { Plus, Wallet, Loader2 } from "lucide-react";
 
-type Tab = "overview" | "weekly" | "fixed" | "income" | "plan";
+type Tab = "overview" | "weekly" | "fixed" | "income" | "budget" | "plan";
 
 const TABS: { key: Tab; label: string }[] = [
   { key: "overview", label: "概要" },
   { key: "weekly", label: "週間記録" },
   { key: "fixed", label: "固定費" },
   { key: "income", label: "収入・貯蓄" },
+  { key: "budget", label: "予算" },
   { key: "plan", label: "計画" },
 ];
 
@@ -30,7 +32,7 @@ export default function BudgetPage() {
   const {
     year, month, prevMonth, nextMonth,
     entries, plans, loading,
-    addEntry, deleteEntry, addPlan,
+    addEntry, deleteEntry, addPlan, deletePlan,
     addTemplate, deleteTemplate,
     mergedFixedCosts, mergedIncome, mergedSavings, customFixedCategories,
     totals, expenseByCategory, weeklyGroups,
@@ -85,6 +87,7 @@ export default function BudgetPage() {
           expenseByCategory={expenseByCategory}
           year={year}
           month={month}
+          plans={plans}
           entries={entries}
           onAddEntry={addEntry}
           onDeleteEntry={deleteEntry}
@@ -131,6 +134,21 @@ export default function BudgetPage() {
           onDeleteEntry={deleteEntry}
           onAddTemplate={addTemplate}
           onDeleteTemplate={deleteTemplate}
+        />
+      )}
+
+      {tab === "budget" && (
+        <BudgetTab
+          year={year}
+          month={month}
+          totals={totals}
+          plans={plans}
+          entries={entries}
+          expenseByCategory={expenseByCategory}
+          mergedFixedCosts={mergedFixedCosts}
+          customFixedCategories={customFixedCategories}
+          onAddPlan={addPlan}
+          onDeletePlan={deletePlan}
         />
       )}
 
