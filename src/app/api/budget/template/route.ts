@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "未認証" }, { status: 401 });
   }
 
-  const { category, amount, type, day, memo, endDate } = await request.json();
+  const { id, category, amount, type, day, memo, endDate } = await request.json();
 
   if (!category || amount === undefined || !type) {
     return NextResponse.json(
@@ -32,30 +32,31 @@ export async function POST(request: Request) {
     );
   }
 
-  const template = await prisma.budgetTemplate.upsert({
-    where: {
-      userId_category_type: {
+  const data = {
+    amount: Math.round(amount),
+    day: day || 1,
+    memo: memo || null,
+    endDate: endDate ? new Date(endDate) : null,
+  };
+
+  let template;
+  if (id) {
+    // Update existing template
+    template = await prisma.budgetTemplate.update({
+      where: { id },
+      data,
+    });
+  } else {
+    // Create new template
+    template = await prisma.budgetTemplate.create({
+      data: {
         userId: session.user.id,
         category,
         type,
+        ...data,
       },
-    },
-    update: {
-      amount: Math.round(amount),
-      day: day || 1,
-      memo: memo || null,
-      endDate: endDate ? new Date(endDate) : null,
-    },
-    create: {
-      userId: session.user.id,
-      category,
-      amount: Math.round(amount),
-      type,
-      day: day || 1,
-      memo: memo || null,
-      endDate: endDate ? new Date(endDate) : null,
-    },
-  });
+    });
+  }
 
   return NextResponse.json(template);
 }
