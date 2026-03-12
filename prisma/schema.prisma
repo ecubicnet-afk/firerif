@@ -18,8 +18,9 @@ model User {
 
   subscription  Subscription?
   questions     Question[]
-  budgetEntries BudgetEntry[]
-  budgetPlans   BudgetPlan[]
+  budgetEntries    BudgetEntry[]
+  budgetPlans      BudgetPlan[]
+  budgetTemplates  BudgetTemplate[]
   assets        Asset[]
   visionItems   VisionItem[]
   todos         Todo[]
@@ -146,6 +147,23 @@ enum BudgetType {
   INCOME
   EXPENSE
   SAVING
+}
+
+model BudgetTemplate {
+  id        String     @id @default(cuid())
+  userId    String
+  category  String
+  amount    Int
+  type      BudgetType
+  day       Int        @default(1)
+  memo      String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, category, type])
+  @@index([userId])
 }
 
 model Asset {
