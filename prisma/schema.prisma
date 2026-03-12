@@ -21,9 +21,11 @@ model User {
   budgetEntries    BudgetEntry[]
   budgetPlans      BudgetPlan[]
   budgetTemplates  BudgetTemplate[]
-  assets        Asset[]
-  visionItems   VisionItem[]
-  todos         Todo[]
+  assets             Asset[]
+  portfolioHoldings  PortfolioHolding[]
+  assetSnapshots     AssetSnapshot[]
+  visionItems        VisionItem[]
+  todos              Todo[]
 }
 
 enum Role {
@@ -190,6 +192,40 @@ enum AssetCategory {
   CRYPTO
   PENSION
   OTHER
+}
+
+model PortfolioHolding {
+  id          String   @id @default(cuid())
+  userId      String
+  source      String   // CSV file name
+  name        String   // 銘柄名
+  marketValue Int      // 評価額
+  profit      Int      // 損益
+  nisaType    String   // "特定/一般", "NISA成長", "NISAつみたて" etc.
+  assetType   String   // "投資信託", "株式", "ETF", "REIT", "債券"
+  region      String   // "日本", "米国", "全世界" etc.
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model AssetSnapshot {
+  id             String   @id @default(cuid())
+  userId         String
+  date           String   // "YYYY-MM-DD"
+  totalAsset     Int
+  totalProfit    Int
+  nisaValue      Int
+  cashValue      Int
+  purchaseAmount Int
+  createdAt      DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([userId])
 }
 
 model VisionItem {
