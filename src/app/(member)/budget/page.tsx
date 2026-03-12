@@ -25,6 +25,7 @@ interface BudgetEntry {
   amount: number;
   type: "INCOME" | "EXPENSE" | "SAVING";
   memo: string | null;
+  createdAt: string;
 }
 
 const categories = {
@@ -146,6 +147,34 @@ export default function BudgetPage() {
     .filter((e) => e.type === "SAVING")
     .reduce((sum, e) => sum + e.amount, 0);
   const balance = totalIncome - totalExpense - totalSaving;
+
+  // Group entries by week
+  const weeklyGroups = (() => {
+    if (entries.length === 0) return [];
+    const groups: { label: string; entries: BudgetEntry[] }[] = [];
+    // Build weeks for the month
+    const firstDay = new Date(year, month - 1, 1);
+    const lastDay = new Date(year, month, 0);
+    let weekStart = new Date(firstDay);
+    // Align to Monday
+    const dayOfWeek = weekStart.getDay();
+    if (dayOfWeek !== 1) {
+      weekStart.setDate(weekStart.getDate() - ((dayOfWeek + 6) % 7));
+    }
+    while (weekStart <= lastDay) {
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekEnd.getDate() + 6);
+      const wEntries = entries.filter((e) => {
+        const d = new Date(e.createdAt || `${e.year}-${String(e.month).padStart(2, "0")}-15`);
+        return d >= weekStart && d <= weekEnd;
+      });
+      const label = `${weekStart.getMonth() + 1}/${weekStart.getDate()} 〜 ${weekEnd.getMonth() + 1}/${weekEnd.getDate()}`;
+      groups.push({ label, entries: wEntries });
+      weekStart = new Date(weekStart);
+      weekStart.setDate(weekStart.getDate() + 7);
+    }
+    return groups;
+  })();
 
   const isDreamLoading = savingsLoading || dreamLoading || stampsLoading;
 
@@ -289,43 +318,64 @@ export default function BudgetPage() {
         </Card>
       )}
 
-      {/* Entry list */}
-      <div className="space-y-2">
-        {entries.map((entry) => (
-          <Card key={entry.id}>
-            <CardContent className="flex items-center gap-3 p-3">
-              <Wallet className={`h-4 w-4 ${typeLabels[entry.type].color} shrink-0`} />
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="text-xs">
-                    {typeLabels[entry.type].label}
-                  </Badge>
-                  <span className="text-sm font-medium">{entry.category}</span>
-                </div>
-                {entry.memo && (
-                  <p className="text-xs text-muted-foreground truncate">
-                    {entry.memo}
-                  </p>
-                )}
-              </div>
-              <span className={`font-bold ${typeLabels[entry.type].color}`}>
-                {formatYen(entry.amount)}
-              </span>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="shrink-0"
-                onClick={() => handleDelete(entry.id)}
-              >
-                <Trash2 className="h-4 w-4 text-muted-foreground" />
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
-        {entries.length === 0 && (
+      {/* Entry list grouped by week */}
+      <div className="space-y-4">
+        {entries.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">
             {year}年{month}月の記録はまだありません
           </p>
+        ) : (
+          weeklyGroups.map((group) => (
+            <div key={group.label}>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-bold text-muted-foreground">{group.label}</h3>
+                {group.entries.length > 0 && (
+                  <span className="text-xs text-muted-foreground">
+                    {group.entries.length}件
+                  </span>
+                )}
+              </div>
+              {group.entries.length > 0 ? (
+                <div className="space-y-2">
+                  {group.entries.map((entry) => (
+                    <Card key={entry.id}>
+                      <CardContent className="flex items-center gap-3 p-3">
+                        <Wallet className={`h-4 w-4 ${typeLabels[entry.type].color} shrink-0`} />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-xs">
+                              {typeLabels[entry.type].label}
+                            </Badge>
+                            <span className="text-sm font-medium">{entry.category}</span>
+                          </div>
+                          {entry.memo && (
+                            <p className="text-xs text-muted-foreground truncate">
+                              {entry.memo}
+                            </p>
+                          )}
+                        </div>
+                        <span className={`font-bold ${typeLabels[entry.type].color}`}>
+                          {formatYen(entry.amount)}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="shrink-0"
+                          onClick={() => handleDelete(entry.id)}
+                        >
+                          <Trash2 className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground text-center py-3 bg-muted/30 rounded-lg">
+                  記録なし
+                </p>
+              )}
+            </div>
+          ))
         )}
       </div>
 

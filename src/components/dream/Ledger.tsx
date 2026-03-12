@@ -33,6 +33,10 @@ export function Ledger({
   const [weekOffset, setWeekOffset] = useState(0);
 
   const filteredEntries = useMemo(() => {
+    if (viewMode === "yearly") {
+      const prefix = `${year}-`;
+      return entries.filter((e) => e.date.startsWith(prefix));
+    }
     if (viewMode === "monthly") {
       const prefix = `${year}-${String(month).padStart(2, "0")}`;
       return entries.filter((e) => e.date.startsWith(prefix));
@@ -51,7 +55,9 @@ export function Ledger({
   }, [entries, viewMode, year, month, weekOffset]);
 
   function prevPeriod() {
-    if (viewMode === "monthly") {
+    if (viewMode === "yearly") {
+      setYear(year - 1);
+    } else if (viewMode === "monthly") {
       if (month === 1) { setYear(year - 1); setMonth(12); }
       else setMonth(month - 1);
     } else {
@@ -60,7 +66,9 @@ export function Ledger({
   }
 
   function nextPeriod() {
-    if (viewMode === "monthly") {
+    if (viewMode === "yearly") {
+      setYear(year + 1);
+    } else if (viewMode === "monthly") {
       if (month === 12) { setYear(year + 1); setMonth(1); }
       else setMonth(month + 1);
     } else {
@@ -69,6 +77,9 @@ export function Ledger({
   }
 
   function periodLabel() {
+    if (viewMode === "yearly") {
+      return `${year}年`;
+    }
     if (viewMode === "monthly") {
       return `${year}年${month}月`;
     }
@@ -102,7 +113,7 @@ export function Ledger({
         </div>
       </div>
 
-      {/* Monthly summary */}
+      {/* Summary */}
       <MonthlySummary
         entries={filteredEntries}
         courseId={courseId}
