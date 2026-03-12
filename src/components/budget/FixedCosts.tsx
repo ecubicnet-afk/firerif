@@ -53,6 +53,7 @@ export function FixedCosts({ year, month, mergedEntries, customCategories, onAdd
   const [saving, setSaving] = useState(false);
   const [addingCustom, setAddingCustom] = useState(false);
   const [customName, setCustomName] = useState("");
+  const [pendingCustomCats, setPendingCustomCats] = useState<string[]>([]);
 
   // Group merged entries by category
   const byCat: Record<string, MergedEntry[]> = {};
@@ -91,6 +92,13 @@ export function FixedCosts({ year, month, mergedEntries, customCategories, onAdd
   }
 
   function cancelEdit() {
+    // Remove pending custom cat if it has no saved entries
+    if (editCat && pendingCustomCats.includes(editCat)) {
+      const catEntries = byCat[editCat] || [];
+      if (catEntries.length === 0) {
+        setPendingCustomCats(prev => prev.filter(c => c !== editCat));
+      }
+    }
     setEditCat(null);
     setEditAmount("");
     setEditDay("");
@@ -120,7 +128,14 @@ export function FixedCosts({ year, month, mergedEntries, customCategories, onAdd
         memo: editMemo || undefined,
         endDate: editEndDate ? `${editEndDate}-01` : null,
       });
-      cancelEdit();
+      // Clean up pending custom cat (now saved in DB)
+      setPendingCustomCats(prev => prev.filter(c => c !== category));
+      setEditCat(null);
+      setEditAmount("");
+      setEditDay("");
+      setEditMemo("");
+      setEditEndDate("");
+      setEditingEntryId(null);
     } finally {
       setSaving(false);
     }
@@ -139,13 +154,24 @@ export function FixedCosts({ year, month, mergedEntries, customCategories, onAdd
         type: "EXPENSE",
         memo: editMemo || undefined,
       });
-      cancelEdit();
+      // Clean up pending custom cat (now saved in DB)
+      setPendingCustomCats(prev => prev.filter(c => c !== category));
+      setEditCat(null);
+      setEditAmount("");
+      setEditDay("");
+      setEditMemo("");
+      setEditEndDate("");
+      setEditingEntryId(null);
     } finally {
       setSaving(false);
     }
   }
 
-  const allCategories = [...FIXED_COST_CATEGORIES, ...customCategories];
+  const allCategories = [
+    ...FIXED_COST_CATEGORIES,
+    ...customCategories,
+    ...pendingCustomCats.filter(c => !customCategories.includes(c)),
+  ];
 
   return (
     <Card>
@@ -348,6 +374,10 @@ export function FixedCosts({ year, month, mergedEntries, customCategories, onAdd
                     onClick={() => {
                       const name = customName.trim();
                       if (name) {
+                        // Add to pending custom cats so it appears in the category list
+                        if (!customCategories.includes(name) && !pendingCustomCats.includes(name)) {
+                          setPendingCustomCats(prev => [...prev, name]);
+                        }
                         setAddingCustom(false);
                         setCustomName("");
                         startAddNew(name);
