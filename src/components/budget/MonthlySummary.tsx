@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { formatYen } from "@/lib/utils";
+import { evaluateExpression, isExpressionString } from "@/lib/budget-utils";
 import {
   EXPENSE_GROUP_CONFIG,
   LIVING_EXPENSE_CATEGORIES,
@@ -55,21 +56,7 @@ const EXPENSE_COLORS = [
   "#a855f7", "#6366f1", "#84cc16",
 ];
 
-// Safely evaluate arithmetic expression (only numbers and +-*/ and parentheses)
-function evaluateExpression(expr: string): number | null {
-  const cleaned = expr.replace(/\s/g, "");
-  if (!cleaned) return null;
-  // Only allow digits, +, -, *, /, (, ), and decimal points
-  if (!/^[\d+\-*/.()]+$/.test(cleaned)) return null;
-  try {
-    // Use Function constructor to evaluate safely
-    const result = new Function("return (" + cleaned + ")")();
-    if (typeof result !== "number" || !isFinite(result)) return null;
-    return Math.round(result);
-  } catch {
-    return null;
-  }
-}
+// evaluateExpression imported from @/lib/budget-utils
 
 export function MonthlySummary({ totals, expenseByCategory, year, month, entries, onAddEntry, onDeleteEntry }: Props) {
   // Form state
@@ -94,7 +81,7 @@ export function MonthlySummary({ totals, expenseByCategory, year, month, entries
 
   // Evaluate amount expression for preview
   const evaluatedAmount = evaluateExpression(amount);
-  const isExpression = amount.includes("+") || amount.includes("-") || amount.includes("*");
+  const isExpression = isExpressionString(amount);
 
   // Recent expense entries (descending by day, then by createdAt)
   const recentExpenses = useMemo(() => {

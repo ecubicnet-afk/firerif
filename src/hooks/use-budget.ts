@@ -135,6 +135,7 @@ export function useBudget() {
   }
 
   async function addTemplate(data: {
+    id?: string;
     category: string; amount: number;
     type: "INCOME" | "EXPENSE" | "SAVING";
     day?: number; memo?: string; endDate?: string | null;
@@ -153,13 +154,13 @@ export function useBudget() {
   }
 
   // Merge templates with entries for a given set of categories and type
-  // Returns MergedEntry[] for each category — both template and entries are included
+  // Returns MergedEntry[] — all templates and entries for each category
   function getMergedEntries(categories: readonly string[], type: "INCOME" | "EXPENSE" | "SAVING"): MergedEntry[] {
     const result: MergedEntry[] = [];
     for (const cat of categories) {
-      // Always include template if it exists
-      const tmpl = templates.find(t => t.type === type && t.category === cat);
-      if (tmpl) {
+      // Include ALL templates for this category (supports multiple per category)
+      const catTemplates = templates.filter(t => t.type === type && t.category === cat);
+      for (const tmpl of catTemplates) {
         result.push({
           category: tmpl.category,
           amount: tmpl.amount,

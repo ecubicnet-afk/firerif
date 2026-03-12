@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatYen } from "@/lib/utils";
+import { evaluateExpression, isExpressionString } from "@/lib/budget-utils";
 import { FIXED_COST_CATEGORIES } from "@/lib/budget-categories";
 import { Trash2, RefreshCw, Pencil, Plus } from "lucide-react";
 import type { MergedEntry } from "@/hooks/use-budget";
@@ -34,6 +35,7 @@ interface Props {
   }) => Promise<void>;
   onDeleteEntry: (id: string) => Promise<void>;
   onAddTemplate: (data: {
+    id?: string;
     category: string; amount: number;
     type: "INCOME" | "EXPENSE" | "SAVING";
     day?: number; memo?: string; endDate?: string | null;
@@ -43,12 +45,12 @@ interface Props {
 
 export function FixedCosts({ year, month, mergedEntries, customCategories, onAddEntry, onDeleteEntry, onAddTemplate, onDeleteTemplate }: Props) {
   const [editCat, setEditCat] = useState<string | null>(null);
+  const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
   const [editAmount, setEditAmount] = useState("");
   const [editDay, setEditDay] = useState("");
   const [editMemo, setEditMemo] = useState("");
   const [editEndDate, setEditEndDate] = useState("");
   const [saving, setSaving] = useState(false);
-  const [isAddMode, setIsAddMode] = useState(false);
   const [addingCustom, setAddingCustom] = useState(false);
   const [customName, setCustomName] = useState("");
 
@@ -61,12 +63,16 @@ export function FixedCosts({ year, month, mergedEntries, customCategories, onAdd
 
   const total = mergedEntries.reduce((s, e) => s + e.amount, 0);
 
+  // Expression support
+  const isExpression = isExpressionString(editAmount);
+  const evaluatedAmount = evaluateExpression(editAmount);
+
   function startEdit(cat: string, entry?: MergedEntry) {
     setEditCat(cat);
     setEditAmount(entry ? String(entry.amount) : "");
     setEditDay(entry ? String(entry.day) : "1");
     setEditMemo(entry?.memo || "");
-    setIsAddMode(!entry);
+    setEditingEntryId(entry ? (entry.templateId || entry.entryId || null) : null);
     if (entry?.endDate) {
       const d = new Date(entry.endDate);
       setEditEndDate(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
@@ -75,22 +81,40 @@ export function FixedCosts({ year, month, mergedEntries, customCategories, onAdd
     }
   }
 
+  function startAddNew(cat: string) {
+    setEditCat(cat);
+    setEditAmount("");
+    setEditDay("1");
+    setEditMemo("");
+    setEditingEntryId(null);
+    setEditEndDate("");
+  }
+
   function cancelEdit() {
     setEditCat(null);
     setEditAmount("");
     setEditDay("");
     setEditMemo("");
     setEditEndDate("");
-    setIsAddMode(false);
+    setEditingEntryId(null);
+  }
+
+  function getAmount(): number | null {
+    return evaluateExpression(editAmount);
   }
 
   async function handleSaveTemplate(category: string) {
-    if (!editAmount || saving) return;
+    const amt = getAmount();
+    if (!amt || saving) return;
     setSaving(true);
     try {
+      const editingTemplate = editingEntryId
+        ? mergedEntries.find(e => e.templateId === editingEntryId)
+        : null;
       await onAddTemplate({
+        id: editingTemplate?.templateId,
         category,
-        amount: parseInt(editAmount),
+        amount: amt,
         type: "EXPENSE",
         day: parseInt(editDay) || 1,
         memo: editMemo || undefined,
@@ -103,14 +127,15 @@ export function FixedCosts({ year, month, mergedEntries, customCategories, onAdd
   }
 
   async function handleSaveThisMonth(category: string) {
-    if (!editAmount || saving) return;
+    const amt = getAmount();
+    if (!amt || saving) return;
     setSaving(true);
     try {
       await onAddEntry({
         year, month,
         day: parseInt(editDay) || 1,
         category,
-        amount: parseInt(editAmount),
+        amount: amt,
         type: "EXPENSE",
         memo: editMemo || undefined,
       });
@@ -120,9 +145,7 @@ export function FixedCosts({ year, month, mergedEntries, customCategories, onAdd
     }
   }
 
-  async function handleRevertToTemplate(entryId: string) {
-    await onDeleteEntry(entryId);
-  }
+  const allCategories = [...FIXED_COST_CATEGORIES, ...customCategories];
 
   return (
     <Card>
@@ -134,7 +157,7 @@ export function FixedCosts({ year, month, mergedEntries, customCategories, onAdd
       </CardHeader>
       <CardContent>
         <div className="space-y-1">
-          {[...FIXED_COST_CATEGORIES, ...customCategories].map(cat => {
+          {allCategories.map(cat => {
             const catEntries = byCat[cat] || [];
             const catTotal = catEntries.reduce((s, e) => s + e.amount, 0);
             const isEditing = editCat === cat;
@@ -142,41 +165,60 @@ export function FixedCosts({ year, month, mergedEntries, customCategories, onAdd
 
             return (
               <div key={cat} className="border-b border-dashed last:border-b-0">
-                <div
-                  className={`flex items-center gap-2 py-2 ${!isEditing && hasEntry ? "cursor-pointer hover:bg-muted/30" : ""}`}
-                  onClick={() => {
-                    if (!isEditing && hasEntry) {
-                      startEdit(cat, catEntries[0]);
-                    }
-                  }}
-                >
+                <div className="flex items-center gap-2 py-2">
                   <span className="text-sm w-20 shrink-0 font-medium">{cat}</span>
                   <div className="flex-1">
                     {hasEntry ? (
-                      <div className="flex items-center gap-2 text-xs">
-                        {catEntries.map((e, i) => (
-                          <div key={i} className="flex items-center gap-1 flex-wrap">
-                            <span className="font-bold">{formatYen(e.amount)}</span>
-                            {e.memo && <span className="text-muted-foreground">{e.memo}</span>}
-                            {e.endDate && (
-                              <span className="text-[10px] text-green-600 bg-green-50 px-1 rounded">
-                                {formatEndDate(e.endDate, year, month)}
-                              </span>
-                            )}
-                            {e.source === "template" ? (
-                              <span className="text-[10px] text-blue-500 bg-blue-50 px-1 rounded">毎月</span>
-                            ) : (
-                              <span className="text-[10px] text-orange-500 bg-orange-50 px-1 rounded">今月</span>
-                            )}
-                          </div>
-                        ))}
+                      <div className="flex flex-col gap-0.5">
+                        {catEntries.map((e, i) => {
+                          const eid = e.templateId || e.entryId || String(i);
+                          return (
+                            <div
+                              key={eid}
+                              className="flex items-center gap-1 text-xs cursor-pointer hover:bg-muted/30 rounded px-1 -mx-1 py-0.5 group"
+                              onClick={() => {
+                                if (!isEditing || editingEntryId !== eid) startEdit(cat, e);
+                              }}
+                            >
+                              <span className="font-bold">{formatYen(e.amount)}</span>
+                              {e.memo && <span className="text-muted-foreground">{e.memo}</span>}
+                              {e.endDate && (
+                                <span className="text-[10px] text-green-600 bg-green-50 px-1 rounded">
+                                  {formatEndDate(e.endDate, year, month)}
+                                </span>
+                              )}
+                              {e.source === "template" ? (
+                                <span className="text-[10px] text-blue-500 bg-blue-50 px-1 rounded">毎月</span>
+                              ) : (
+                                <span className="text-[10px] text-orange-500 bg-orange-50 px-1 rounded">今月</span>
+                              )}
+                              {/* Inline delete button */}
+                              {e.source === "template" && e.templateId && (
+                                <button
+                                  className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 ml-auto"
+                                  onClick={(ev) => { ev.stopPropagation(); onDeleteTemplate(e.templateId!); }}
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </button>
+                              )}
+                              {e.source === "entry" && e.entryId && (
+                                <button
+                                  className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 ml-auto"
+                                  onClick={(ev) => { ev.stopPropagation(); onDeleteEntry(e.entryId!); }}
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </button>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     ) : (
                       <Button
                         size="sm"
                         variant="ghost"
                         className="h-6 text-xs text-muted-foreground"
-                        onClick={(e) => { e.stopPropagation(); startEdit(cat); }}
+                        onClick={() => startAddNew(cat)}
                       >
                         + 設定する
                       </Button>
@@ -187,7 +229,7 @@ export function FixedCosts({ year, month, mergedEntries, customCategories, onAdd
                       size="sm"
                       variant="ghost"
                       className="h-6 w-6 p-0 shrink-0"
-                      onClick={(e) => { e.stopPropagation(); startEdit(cat); }}
+                      onClick={() => startAddNew(cat)}
                     >
                       <Plus className="h-3 w-3" />
                     </Button>
@@ -204,13 +246,19 @@ export function FixedCosts({ year, month, mergedEntries, customCategories, onAdd
                       <div>
                         <label className="text-[10px] text-muted-foreground">金額（円）</label>
                         <Input
-                          type="number"
+                          type="text"
+                          inputMode="decimal"
                           value={editAmount}
                           onChange={(e) => setEditAmount(e.target.value)}
                           placeholder="0"
                           className="h-7 text-xs"
                           autoFocus
                         />
+                        {isExpression && evaluatedAmount !== null && (
+                          <p className="text-[10px] text-muted-foreground mt-0.5">
+                            = {evaluatedAmount.toLocaleString()}円
+                          </p>
+                        )}
                       </div>
                       <div>
                         <label className="text-[10px] text-muted-foreground">支払日</label>
@@ -245,26 +293,24 @@ export function FixedCosts({ year, month, mergedEntries, customCategories, onAdd
                       )}
                     </div>
                     <div className="flex gap-1.5 flex-wrap">
-                      {!isAddMode && (
-                        <Button
-                          size="sm"
-                          className="h-7 text-xs flex-1"
-                          onClick={() => handleSaveTemplate(cat)}
-                          disabled={saving || !editAmount}
-                        >
-                          <RefreshCw className="h-3 w-3 mr-1" />
-                          毎月に設定
-                        </Button>
-                      )}
                       <Button
                         size="sm"
-                        variant={isAddMode ? "default" : "outline"}
+                        className="h-7 text-xs flex-1"
+                        onClick={() => handleSaveTemplate(cat)}
+                        disabled={saving || !evaluatedAmount}
+                      >
+                        <RefreshCw className="h-3 w-3 mr-1" />
+                        毎月に設定
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
                         className="h-7 text-xs flex-1"
                         onClick={() => handleSaveThisMonth(cat)}
-                        disabled={saving || !editAmount}
+                        disabled={saving || !evaluatedAmount}
                       >
                         <Pencil className="h-3 w-3 mr-1" />
-                        {isAddMode ? "今月に追加" : "今月だけ"}
+                        今月だけ
                       </Button>
                       <Button
                         size="sm"
@@ -275,43 +321,6 @@ export function FixedCosts({ year, month, mergedEntries, customCategories, onAdd
                         キャンセル
                       </Button>
                     </div>
-                    {/* Actions for existing entries */}
-                    {catEntries.length > 0 && (
-                      <div className="flex gap-1.5 pt-1 border-t border-dashed">
-                        {catEntries[0].source === "entry" && catEntries[0].entryId && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-6 text-xs text-blue-500"
-                            onClick={() => handleRevertToTemplate(catEntries[0].entryId!)}
-                          >
-                            テンプレートに戻す
-                          </Button>
-                        )}
-                        {catEntries[0].source === "template" && catEntries[0].templateId && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-6 text-xs text-red-500"
-                            onClick={() => onDeleteTemplate(catEntries[0].templateId!)}
-                          >
-                            <Trash2 className="h-3 w-3 mr-1" />
-                            毎月設定を削除
-                          </Button>
-                        )}
-                        {catEntries[0].source === "entry" && catEntries[0].entryId && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-6 text-xs text-red-500"
-                            onClick={() => onDeleteEntry(catEntries[0].entryId!)}
-                          >
-                            <Trash2 className="h-3 w-3 mr-1" />
-                            削除
-                          </Button>
-                        )}
-                      </div>
-                    )}
                   </div>
                 )}
               </div>
@@ -341,7 +350,7 @@ export function FixedCosts({ year, month, mergedEntries, customCategories, onAdd
                       if (name) {
                         setAddingCustom(false);
                         setCustomName("");
-                        startEdit(name);
+                        startAddNew(name);
                       }
                     }}
                   >

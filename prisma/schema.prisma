@@ -163,8 +163,8 @@ model BudgetTemplate {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, category, type])
   @@index([userId])
+  @@index([userId, category, type])
 }
 
 model Asset {
