@@ -33,7 +33,7 @@ export function ThreeStepPlan({ year, month, totals, plans, onAddPlan }: Props) 
 
   // Load existing plans
   const existingTarget = plans.find(p => p.category === "ベース収支目標");
-  const existingLivingR = plans.find(p => p.category === "生活費削減目標");
+  const existingLivingR = plans.find(p => p.category === "変動費削減目標");
   const existingFixedR = plans.find(p => p.category === "固定費削減目標");
 
   // Next month
@@ -56,7 +56,7 @@ export function ThreeStepPlan({ year, month, totals, plans, onAddPlan }: Props) 
       if (livingReduction) {
         promises.push(onAddPlan({
           year: nextYear, month: nextMonth,
-          category: "生活費削減目標",
+          category: "変動費削減目標",
           amount: parseInt(livingReduction),
           type: "EXPENSE",
         }));
@@ -91,7 +91,7 @@ export function ThreeStepPlan({ year, month, totals, plans, onAddPlan }: Props) 
         <CardContent>
           <div className="flex items-center gap-2 text-sm flex-wrap">
             <div className="text-center p-2 rounded-lg bg-orange-50 dark:bg-orange-950/20 min-w-[100px]">
-              <p className="text-[10px] text-muted-foreground">生活費</p>
+              <p className="text-[10px] text-muted-foreground">変動費</p>
               <p className="font-bold text-orange-600">{formatYen(totals.livingExpense)}</p>
             </div>
             <span className="text-lg font-bold">+</span>
@@ -156,7 +156,7 @@ export function ThreeStepPlan({ year, month, totals, plans, onAddPlan }: Props) 
               <p className="font-bold">{formatYen(existingTarget.amount)}</p>
               {existingLivingR && (
                 <p className="text-xs text-muted-foreground">
-                  生活費削減: {formatYen(existingLivingR.amount)}
+                  変動費削減: {formatYen(existingLivingR.amount)}
                 </p>
               )}
               {existingFixedR && (
@@ -184,7 +184,7 @@ export function ThreeStepPlan({ year, month, totals, plans, onAddPlan }: Props) 
 
             <div className="grid grid-cols-2 gap-2">
               <div className="p-2 rounded-lg border space-y-1">
-                <p className="text-[10px] text-muted-foreground">生活費の削減目標</p>
+                <p className="text-[10px] text-muted-foreground">変動費の削減目標</p>
                 <div className="flex items-center gap-1">
                   <Input
                     type="number"
