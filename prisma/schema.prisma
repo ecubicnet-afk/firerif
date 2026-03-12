@@ -113,6 +113,7 @@ model BudgetEntry {
   userId    String
   year      Int
   month     Int
+  day       Int        @default(1)
   category  String
   amount    Int
   type      BudgetType

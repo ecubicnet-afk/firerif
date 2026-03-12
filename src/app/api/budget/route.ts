@@ -31,7 +31,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "未認証" }, { status: 401 });
   }
 
-  const { year, month, category, amount, type, memo, imageData } = await request.json();
+  const { year, month, day, category, amount, type, memo, imageData } = await request.json();
 
   if (!category || amount === undefined || !type) {
     return NextResponse.json(
@@ -45,6 +45,7 @@ export async function POST(request: Request) {
       userId: session.user.id,
       year: year || new Date().getFullYear(),
       month: month || new Date().getMonth() + 1,
+      day: day || new Date().getDate(),
       category,
       amount: Math.round(amount),
       type,

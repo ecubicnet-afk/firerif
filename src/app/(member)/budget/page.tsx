@@ -24,6 +24,7 @@ interface BudgetEntry {
   id: string;
   year: number;
   month: number;
+  day: number;
   category: string;
   amount: number;
   type: "INCOME" | "EXPENSE" | "SAVING";
@@ -73,6 +74,10 @@ export default function BudgetPage() {
   const [formAmount, setFormAmount] = useState("");
   const [formMemo, setFormMemo] = useState("");
   const [formImage, setFormImage] = useState<string | null>(null);
+  const [formDate, setFormDate] = useState(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  });
   const [loading, setLoading] = useState(false);
   const [expandedImage, setExpandedImage] = useState<string | null>(null);
   const [stampEditorOpen, setStampEditorOpen] = useState(false);
@@ -132,11 +137,14 @@ export default function BudgetPage() {
     if (!formCategory || !formAmount) return;
     setLoading(true);
     try {
+      const dateParts = formDate.split("-").map(Number);
       await fetch("/api/budget", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          year, month,
+          year: dateParts[0],
+          month: dateParts[1],
+          day: dateParts[2],
           category: formCategory,
           amount: parseInt(formAmount),
           type: formType,
@@ -215,7 +223,7 @@ export default function BudgetPage() {
       const weekEnd = new Date(ws);
       weekEnd.setDate(weekEnd.getDate() + 6);
       const wEntries = entries.filter((e) => {
-        const d = new Date(e.createdAt || `${e.year}-${String(e.month).padStart(2, "0")}-15`);
+        const d = new Date(e.year, e.month - 1, e.day || 1);
         return d >= ws && d <= weekEnd;
       });
       const label = `${ws.getMonth() + 1}/${ws.getDate()} 〜 ${weekEnd.getMonth() + 1}/${weekEnd.getDate()}`;
@@ -454,7 +462,12 @@ export default function BudgetPage() {
                   ))}
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="date">日付</Label>
+                  <Input id="date" type="date" value={formDate}
+                    onChange={(e) => setFormDate(e.target.value)} required />
+                </div>
                 <div className="space-y-2">
                   <Label htmlFor="amount">金額（円）</Label>
                   <Input id="amount" type="number" placeholder="0" value={formAmount}
@@ -531,6 +544,7 @@ export default function BudgetPage() {
                         )}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
+                            <span className="text-[10px] text-muted-foreground">{entry.month}/{entry.day || 1}</span>
                             <Badge variant="outline" className="text-xs">
                               {typeLabels[entry.type].label}
                             </Badge>
