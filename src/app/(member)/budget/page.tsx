@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { formatYen } from "@/lib/utils";
-import { Plus, Trash2, ChevronLeft, ChevronRight, Wallet } from "lucide-react";
+import { Plus, Trash2, ChevronLeft, ChevronRight, Wallet, Sparkles } from "lucide-react";
+import Link from "next/link";
 
 interface BudgetEntry {
   id: string;
@@ -140,6 +141,22 @@ export default function BudgetPage() {
           毎月の収支を記録してFIREへの進捗を確認しましょう
         </p>
       </div>
+
+      {/* Dream Unlocker banner */}
+      <Link href="/budget/dream">
+        <Card className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-purple-200 hover:border-purple-300 transition-colors cursor-pointer">
+          <CardContent className="flex items-center gap-3 p-4">
+            <Sparkles className="h-5 w-5 text-purple-500 shrink-0" />
+            <div className="flex-1">
+              <p className="font-bold text-sm">ドリーム・アンロッカー</p>
+              <p className="text-xs text-muted-foreground">
+                節約をスタンプで記録して、夢の画像をアンロックしよう！
+              </p>
+            </div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+          </CardContent>
+        </Card>
+      </Link>
 
       {/* Month selector */}
       <div className="flex items-center justify-center gap-4">
