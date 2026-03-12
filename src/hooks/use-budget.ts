@@ -46,12 +46,14 @@ export interface MergedEntry {
   endDate?: string | null;
 }
 
-// Categories that use templates (fixed costs + income + savings)
-const TEMPLATE_CATEGORIES = new Set<string>([
+// Predefined categories that use templates (fixed costs + income + savings)
+const PREDEFINED_TEMPLATE_CATEGORIES = new Set<string>([
   ...FIXED_COST_CATEGORIES,
   ...INCOME_CATEGORIES,
   ...SAVING_CATEGORIES,
 ]);
+
+const PREDEFINED_FIXED_SET = new Set<string>(FIXED_COST_CATEGORIES);
 
 export function useBudget() {
   const now = new Date();
@@ -188,11 +190,31 @@ export function useBudget() {
     return result;
   }
 
+  // Find custom fixed cost categories (EXPENSE templates/entries not in any predefined set)
+  const customFixedCategories = useMemo(() => {
+    const customs = new Set<string>();
+    for (const t of templates) {
+      if (t.type === "EXPENSE" && !PREDEFINED_TEMPLATE_CATEGORIES.has(t.category)) {
+        customs.add(t.category);
+      }
+    }
+    for (const e of entries) {
+      if (e.type === "EXPENSE" && !PREDEFINED_TEMPLATE_CATEGORIES.has(e.category) && !customs.has(e.category)) {
+        // Only include if it looks like a custom fixed cost (has a template or is not a living/special expense)
+        // Check if there's a template for it
+        if (templates.some(t => t.category === e.category && t.type === "EXPENSE")) {
+          customs.add(e.category);
+        }
+      }
+    }
+    return [...customs];
+  }, [templates, entries]);
+
   // Merged entries for totals calculation
   const mergedFixedCosts = useMemo(
-    () => getMergedEntries(FIXED_COST_CATEGORIES, "EXPENSE"),
+    () => getMergedEntries([...FIXED_COST_CATEGORIES, ...customFixedCategories], "EXPENSE"),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [entries, templates]
+    [entries, templates, customFixedCategories]
   );
   const mergedIncome = useMemo(
     () => getMergedEntries(INCOME_CATEGORIES, "INCOME"),
@@ -207,8 +229,11 @@ export function useBudget() {
 
   // All entries including template-sourced ones (for totals)
   const allEffectiveEntries = useMemo(() => {
+    // Build dynamic template categories set (predefined + custom)
+    const templateCats = new Set<string>(PREDEFINED_TEMPLATE_CATEGORIES);
+    for (const c of customFixedCategories) templateCats.add(c);
     // Start with entries that are NOT template-category types (living expenses, special expenses)
-    const nonTemplateEntries = entries.filter(e => !TEMPLATE_CATEGORIES.has(e.category));
+    const nonTemplateEntries = entries.filter(e => !templateCats.has(e.category));
     // Add merged template entries as pseudo-entries
     const templateBased: BudgetEntry[] = [
       ...mergedFixedCosts.map(m => ({
@@ -234,24 +259,29 @@ export function useBudget() {
       })),
     ];
     return [...nonTemplateEntries, ...templateBased];
-  }, [entries, mergedFixedCosts, mergedIncome, mergedSavings, year, month]);
+  }, [entries, mergedFixedCosts, mergedIncome, mergedSavings, year, month, customFixedCategories]);
 
   // Totals - now includes template values
+  // Build a set of all fixed cost categories (predefined + custom) for classification
+  const allFixedCatSet = useMemo(() => {
+    const s = new Set<string>(FIXED_COST_CATEGORIES);
+    for (const c of customFixedCategories) s.add(c);
+    return s;
+  }, [customFixedCategories]);
+
   const totals = useMemo(() => {
     const all = allEffectiveEntries;
     const income = all.filter(e => e.type === "INCOME").reduce((s, e) => s + e.amount, 0);
     const expense = all.filter(e => e.type === "EXPENSE").reduce((s, e) => s + e.amount, 0);
     const saving = all.filter(e => e.type === "SAVING").reduce((s, e) => s + e.amount, 0);
 
-    const livingExpense = all
-      .filter(e => e.type === "EXPENSE" && getExpenseGroup(e.category) === "生活費")
-      .reduce((s, e) => s + e.amount, 0);
     const fixedCost = all
-      .filter(e => e.type === "EXPENSE" && getExpenseGroup(e.category) === "固定費")
+      .filter(e => e.type === "EXPENSE" && allFixedCatSet.has(e.category))
       .reduce((s, e) => s + e.amount, 0);
     const specialExpense = all
       .filter(e => e.type === "EXPENSE" && getExpenseGroup(e.category) === "特別出費")
       .reduce((s, e) => s + e.amount, 0);
+    const livingExpense = expense - fixedCost - specialExpense;
 
     const baseExpense = livingExpense + fixedCost;
     const salary = all.filter(e => e.type === "INCOME" && e.category === "給与").reduce((s, e) => s + e.amount, 0);
@@ -263,21 +293,22 @@ export function useBudget() {
       baseExpense, salary, baseBalance,
       balance: income - expense - saving,
     };
-  }, [allEffectiveEntries]);
+  }, [allEffectiveEntries, allFixedCatSet]);
 
   // Expense by category - includes template values
   const expenseByCategory = useMemo(() => {
     const map: Record<string, { amount: number; group: ExpenseGroup }> = {};
     allEffectiveEntries.filter(e => e.type === "EXPENSE").forEach(e => {
       if (!map[e.category]) {
-        map[e.category] = { amount: 0, group: getExpenseGroup(e.category) };
+        const group = allFixedCatSet.has(e.category) ? "固定費" : getExpenseGroup(e.category);
+        map[e.category] = { amount: 0, group };
       }
       map[e.category].amount += e.amount;
     });
     return Object.entries(map)
       .map(([category, data]) => ({ category, ...data }))
       .sort((a, b) => b.amount - a.amount);
-  }, [allEffectiveEntries]);
+  }, [allEffectiveEntries, allFixedCatSet]);
 
   // Weekly grid data - only uses actual entries (not templates)
   const weeklyGroups = useMemo(() => {
@@ -312,7 +343,7 @@ export function useBudget() {
     addTemplate, deleteTemplate,
     fetchEntries, fetchPlans, fetchTemplates,
     getMergedEntries,
-    mergedFixedCosts, mergedIncome, mergedSavings,
+    mergedFixedCosts, mergedIncome, mergedSavings, customFixedCategories,
     totals, expenseByCategory, weeklyGroups,
   };
 }
