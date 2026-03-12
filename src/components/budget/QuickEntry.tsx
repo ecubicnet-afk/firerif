@@ -16,7 +16,7 @@ import {
 } from "@/lib/budget-categories";
 
 type EntryType = "INCOME" | "EXPENSE" | "SAVING";
-type ExpenseSubGroup = "生活費" | "固定費" | "特別出費";
+type ExpenseSubGroup = "変動費" | "固定費" | "特別出費";
 
 const TYPE_LABELS: Record<string, { label: string; color: string }> = {
   INCOME: { label: "収入", color: "text-green-600" },
@@ -25,7 +25,7 @@ const TYPE_LABELS: Record<string, { label: string; color: string }> = {
 };
 
 const EXPENSE_SUBGROUPS: { key: ExpenseSubGroup; cats: readonly string[] }[] = [
-  { key: "生活費", cats: LIVING_EXPENSE_CATEGORIES },
+  { key: "変動費", cats: LIVING_EXPENSE_CATEGORIES },
   { key: "固定費", cats: FIXED_COST_CATEGORIES },
   { key: "特別出費", cats: SPECIAL_EXPENSE_CATEGORIES },
 ];
@@ -45,7 +45,7 @@ interface Props {
 
 export function QuickEntry({ year, month, onAddEntry, onClose }: Props) {
   const [type, setType] = useState<EntryType>("EXPENSE");
-  const [subGroup, setSubGroup] = useState<ExpenseSubGroup>("生活費");
+  const [subGroup, setSubGroup] = useState<ExpenseSubGroup>("変動費");
   const [category, setCategory] = useState("");
   const [amount, setAmount] = useState("");
   const [memo, setMemo] = useState("");

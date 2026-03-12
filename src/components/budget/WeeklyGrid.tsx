@@ -76,7 +76,7 @@ export function WeeklyGrid({ year, month, weeklyGroups }: Props) {
 
         // Only count living expenses in the grid
         const livingEntries = week.entries.filter(
-          e => e.type === "EXPENSE" && getExpenseGroup(e.category) === "生活費"
+          e => e.type === "EXPENSE" && getExpenseGroup(e.category) === "変動費"
         );
 
         for (const entry of livingEntries) {

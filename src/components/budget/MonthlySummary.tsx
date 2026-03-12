@@ -18,10 +18,10 @@ import type { ExpenseGroup } from "@/lib/budget-categories";
 import type { BudgetEntry } from "@/hooks/use-budget";
 import { ImageIcon, X, ChevronDown, Trash2, Check } from "lucide-react";
 
-type ExpenseSubGroup = "生活費" | "固定費" | "特別出費";
+type ExpenseSubGroup = "変動費" | "固定費" | "特別出費";
 
 const EXPENSE_SUBGROUPS: { key: ExpenseSubGroup; cats: readonly string[] }[] = [
-  { key: "生活費", cats: LIVING_EXPENSE_CATEGORIES },
+  { key: "変動費", cats: LIVING_EXPENSE_CATEGORIES },
   { key: "固定費", cats: FIXED_COST_CATEGORIES },
   { key: "特別出費", cats: SPECIAL_EXPENSE_CATEGORIES },
 ];
@@ -60,7 +60,7 @@ const EXPENSE_COLORS = [
 
 export function MonthlySummary({ totals, expenseByCategory, year, month, entries, onAddEntry, onDeleteEntry }: Props) {
   // Form state
-  const [subGroup, setSubGroup] = useState<ExpenseSubGroup>("生活費");
+  const [subGroup, setSubGroup] = useState<ExpenseSubGroup>("変動費");
   const [category, setCategory] = useState("");
   const [amount, setAmount] = useState("");
   const [memo, setMemo] = useState("");
@@ -188,9 +188,9 @@ export function MonthlySummary({ totals, expenseByCategory, year, month, entries
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="grid grid-cols-3 gap-2">
-            {(["生活費", "固定費", "特別出費"] as const).map((group) => {
+            {(["変動費", "固定費", "特別出費"] as const).map((group) => {
               const cfg = EXPENSE_GROUP_CONFIG[group];
-              const groupAmount = group === "生活費" ? totals.livingExpense
+              const groupAmount = group === "変動費" ? totals.livingExpense
                 : group === "固定費" ? totals.fixedCost : totals.specialExpense;
               return (
                 <div key={group} className="text-center p-2 rounded-lg bg-muted/50">

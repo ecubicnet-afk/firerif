@@ -1,6 +1,6 @@
 // 家計ノート風カテゴリ分類
 
-export type ExpenseGroup = "生活費" | "特別出費" | "固定費";
+export type ExpenseGroup = "変動費" | "特別出費" | "固定費";
 
 export const LIVING_EXPENSE_CATEGORIES = [
   "食費", "日用品", "衣服・美容費", "趣味・娯楽", "交通費",
@@ -33,8 +33,8 @@ export const ALL_EXPENSE_CATEGORIES = [
 // Backward-compatible mapping for old categories
 const LEGACY_MAPPING: Record<string, ExpenseGroup> = {
   "光熱費": "固定費",
-  "衣服": "生活費",
-  "その他支出": "生活費",
+  "衣服": "変動費",
+  "その他支出": "変動費",
 };
 
 const LIVING_SET = new Set<string>(LIVING_EXPENSE_CATEGORIES);
@@ -43,15 +43,15 @@ const SPECIAL_SET = new Set<string>(SPECIAL_EXPENSE_CATEGORIES);
 
 export function getExpenseGroup(category: string): ExpenseGroup {
   if (LEGACY_MAPPING[category]) return LEGACY_MAPPING[category];
-  if (LIVING_SET.has(category)) return "生活費";
+  if (LIVING_SET.has(category)) return "変動費";
   if (FIXED_SET.has(category)) return "固定費";
   if (SPECIAL_SET.has(category)) return "特別出費";
-  // Unknown categories default to 生活費
-  return "生活費";
+  // Unknown categories default to 変動費
+  return "変動費";
 }
 
 export const EXPENSE_GROUP_CONFIG: Record<ExpenseGroup, { color: string; label: string }> = {
-  "生活費": { color: "text-orange-600", label: "生活費" },
+  "変動費": { color: "text-orange-600", label: "変動費" },
   "固定費": { color: "text-blue-600", label: "固定費" },
   "特別出費": { color: "text-purple-600", label: "特別出費" },
 };
