@@ -45,7 +45,7 @@ export interface Category {
   icon: string;
 }
 
-export type ViewMode = 'monthly' | 'weekly';
+export type ViewMode = 'monthly' | 'weekly' | 'yearly';
 
 export interface Preferences {
   courseId: CourseId;
