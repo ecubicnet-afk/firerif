@@ -15,7 +15,8 @@ import {
   SPECIAL_EXPENSE_CATEGORIES,
 } from "@/lib/budget-categories";
 import type { ExpenseGroup } from "@/lib/budget-categories";
-import type { BudgetEntry } from "@/hooks/use-budget";
+import type { BudgetEntry, BudgetPlan } from "@/hooks/use-budget";
+import { BudgetProgressBar } from "./BudgetProgressBar";
 import { ImageIcon, X, ChevronDown, Trash2, Check } from "lucide-react";
 
 type ExpenseSubGroup = "変動費" | "固定費" | "特別出費";
@@ -39,6 +40,7 @@ interface Props {
   expenseByCategory: { category: string; amount: number; group: ExpenseGroup }[];
   year: number;
   month: number;
+  plans: BudgetPlan[];
   entries: BudgetEntry[];
   onAddEntry: (data: {
     year: number; month: number; day: number;
@@ -58,7 +60,7 @@ const EXPENSE_COLORS = [
 
 // evaluateExpression imported from @/lib/budget-utils
 
-export function MonthlySummary({ totals, expenseByCategory, year, month, entries, onAddEntry, onDeleteEntry }: Props) {
+export function MonthlySummary({ totals, expenseByCategory, year, month, plans, entries, onAddEntry, onDeleteEntry }: Props) {
   // Form state
   const [subGroup, setSubGroup] = useState<ExpenseSubGroup>("変動費");
   const [category, setCategory] = useState("");
@@ -180,6 +182,50 @@ export function MonthlySummary({ totals, expenseByCategory, year, month, entries
           </CardContent>
         </Card>
       </div>
+
+      {/* Budget vs Actual — only show if budgets are set */}
+      {(() => {
+        const PLAN_CATS = new Set(["ベース収支目標", "変動費削減目標", "固定費削減目標"]);
+        const budgetPlans = plans.filter(p => p.type === "EXPENSE" && !PLAN_CATS.has(p.category));
+        if (budgetPlans.length === 0) return null;
+
+        // Calculate group budgets
+        const livingBudget = budgetPlans
+          .filter(p => LIVING_EXPENSE_CATEGORIES.includes(p.category as typeof LIVING_EXPENSE_CATEGORIES[number]))
+          .reduce((s, p) => s + p.amount, 0);
+        const fixedBudget = budgetPlans
+          .filter(p => FIXED_COST_CATEGORIES.includes(p.category as typeof FIXED_COST_CATEGORIES[number]))
+          .reduce((s, p) => s + p.amount, 0);
+        const totalBudget = budgetPlans.reduce((s, p) => s + p.amount, 0);
+
+        return (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">予算の達成状況</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {livingBudget > 0 && (
+                <div>
+                  <p className="text-xs font-medium text-orange-600 mb-1">変動費</p>
+                  <BudgetProgressBar spent={totals.livingExpense} budget={livingBudget} size="sm" />
+                </div>
+              )}
+              {fixedBudget > 0 && (
+                <div>
+                  <p className="text-xs font-medium text-blue-600 mb-1">固定費</p>
+                  <BudgetProgressBar spent={totals.fixedCost} budget={fixedBudget} size="sm" />
+                </div>
+              )}
+              {totalBudget > 0 && (
+                <div className="pt-2 border-t">
+                  <p className="text-xs font-medium mb-1">全体</p>
+                  <BudgetProgressBar spent={totals.expense} budget={totalBudget} />
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        );
+      })()}
 
       {/* Expense breakdown by group */}
       <Card>
