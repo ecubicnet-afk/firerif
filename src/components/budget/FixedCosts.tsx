@@ -25,6 +25,7 @@ interface Props {
   year: number;
   month: number;
   mergedEntries: MergedEntry[];
+  customCategories: string[];
   onAddEntry: (data: {
     year: number; month: number; day: number;
     category: string; amount: number;
@@ -40,13 +41,15 @@ interface Props {
   onDeleteTemplate: (id: string) => Promise<void>;
 }
 
-export function FixedCosts({ year, month, mergedEntries, onAddEntry, onDeleteEntry, onAddTemplate, onDeleteTemplate }: Props) {
+export function FixedCosts({ year, month, mergedEntries, customCategories, onAddEntry, onDeleteEntry, onAddTemplate, onDeleteTemplate }: Props) {
   const [editCat, setEditCat] = useState<string | null>(null);
   const [editAmount, setEditAmount] = useState("");
   const [editDay, setEditDay] = useState("");
   const [editMemo, setEditMemo] = useState("");
   const [editEndDate, setEditEndDate] = useState("");
   const [saving, setSaving] = useState(false);
+  const [addingCustom, setAddingCustom] = useState(false);
+  const [customName, setCustomName] = useState("");
 
   // Group merged entries by category
   const byCat: Record<string, MergedEntry[]> = {};
@@ -128,7 +131,7 @@ export function FixedCosts({ year, month, mergedEntries, onAddEntry, onDeleteEnt
       </CardHeader>
       <CardContent>
         <div className="space-y-1">
-          {FIXED_COST_CATEGORIES.map(cat => {
+          {[...FIXED_COST_CATEGORIES, ...customCategories].map(cat => {
             const catEntries = byCat[cat] || [];
             const catTotal = catEntries.reduce((s, e) => s + e.amount, 0);
             const isEditing = editCat === cat;
@@ -309,6 +312,60 @@ export function FixedCosts({ year, month, mergedEntries, onAddEntry, onDeleteEnt
               </div>
             );
           })}
+          {/* Add custom category */}
+          <div className="border-b border-dashed">
+            {addingCustom ? (
+              <div className="bg-muted/20 px-3 py-2 rounded space-y-2">
+                <div>
+                  <label className="text-[10px] text-muted-foreground">項目名</label>
+                  <Input
+                    value={customName}
+                    onChange={(e) => setCustomName(e.target.value)}
+                    placeholder="例: サブスク、駐車場代"
+                    className="h-7 text-xs"
+                    autoFocus
+                  />
+                </div>
+                <div className="flex gap-1.5">
+                  <Button
+                    size="sm"
+                    className="h-7 text-xs"
+                    disabled={!customName.trim()}
+                    onClick={() => {
+                      const name = customName.trim();
+                      if (name) {
+                        setAddingCustom(false);
+                        setCustomName("");
+                        startEdit(name);
+                      }
+                    }}
+                  >
+                    次へ
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 text-xs"
+                    onClick={() => { setAddingCustom(false); setCustomName(""); }}
+                  >
+                    キャンセル
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="py-2">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-6 text-xs text-muted-foreground"
+                  onClick={() => setAddingCustom(true)}
+                >
+                  <Plus className="h-3 w-3 mr-1" />
+                  カスタム項目を追加
+                </Button>
+              </div>
+            )}
+          </div>
           {/* Total */}
           <div className="flex items-center justify-between pt-2 border-t">
             <span className="text-sm font-bold">合計</span>

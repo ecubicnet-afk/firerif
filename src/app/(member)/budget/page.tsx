@@ -32,7 +32,7 @@ export default function BudgetPage() {
     entries, plans, loading,
     addEntry, deleteEntry, addPlan,
     addTemplate, deleteTemplate,
-    mergedFixedCosts, mergedIncome, mergedSavings,
+    mergedFixedCosts, mergedIncome, mergedSavings, customFixedCategories,
     totals, expenseByCategory, weeklyGroups,
   } = useBudget();
 
@@ -113,6 +113,7 @@ export default function BudgetPage() {
           year={year}
           month={month}
           mergedEntries={mergedFixedCosts}
+          customCategories={customFixedCategories}
           onAddEntry={addEntry}
           onDeleteEntry={deleteEntry}
           onAddTemplate={addTemplate}
