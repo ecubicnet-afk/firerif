@@ -44,7 +44,7 @@ export default function DreamBudgetPage() {
       <div>
         <div className="flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-primary" />
-          <h1 className="text-2xl font-bold">ドリーム・アンロッカー</h1>
+          <h1 className="text-2xl font-bold">節約ドリーム</h1>
         </div>
         <p className="text-muted-foreground mt-1 text-sm">
           今日の節約が、20年後の夢のチケットに変わる
