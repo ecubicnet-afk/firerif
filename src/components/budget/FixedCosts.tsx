@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatYen } from "@/lib/utils";
 import { FIXED_COST_CATEGORIES } from "@/lib/budget-categories";
-import { Trash2, RefreshCw, Pencil } from "lucide-react";
+import { Trash2, RefreshCw, Pencil, Plus } from "lucide-react";
 import type { MergedEntry } from "@/hooks/use-budget";
 
 function formatEndDate(endDate: string | null | undefined, currentYear: number, currentMonth: number): string | null {
@@ -176,6 +176,16 @@ export function FixedCosts({ year, month, mergedEntries, onAddEntry, onDeleteEnt
                       </Button>
                     )}
                   </div>
+                  {hasEntry && !isEditing && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 w-6 p-0 shrink-0"
+                      onClick={(e) => { e.stopPropagation(); startEdit(cat); }}
+                    >
+                      <Plus className="h-3 w-3" />
+                    </Button>
+                  )}
                   <span className="text-sm font-bold w-20 text-right shrink-0">
                     {catTotal > 0 ? formatYen(catTotal) : ""}
                   </span>
