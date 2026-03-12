@@ -91,6 +91,8 @@ export default function BudgetPage() {
           entries={entries}
           onAddEntry={addEntry}
           onDeleteEntry={deleteEntry}
+          mergedFixedCosts={mergedFixedCosts}
+          mergedSavings={mergedSavings}
         />
       )}
 
