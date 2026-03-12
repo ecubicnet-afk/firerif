@@ -29,3 +29,8 @@ export function formatDateTime(date: Date | string): string {
     minute: "2-digit",
   }).format(new Date(date));
 }
+
+export function formatShortDate(date: Date | string): string {
+  const d = new Date(date);
+  return `${d.getMonth() + 1}/${d.getDate()}`;
+}

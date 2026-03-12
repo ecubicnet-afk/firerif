@@ -1,0 +1,48 @@
+"use client";
+
+import { useState } from "react";
+import { formatYen, formatShortDate } from "@/lib/utils";
+import { futureValue } from "@/lib/dream-calc";
+import { Trash2 } from "lucide-react";
+import type { SavingsEntry, CourseId } from "@/types/dream";
+
+interface LedgerRowProps {
+  entry: SavingsEntry;
+  courseId: CourseId;
+  onDelete: (id: number) => void;
+}
+
+export function LedgerRow({ entry, courseId, onDelete }: LedgerRowProps) {
+  const [showDelete, setShowDelete] = useState(false);
+  const fv = futureValue(entry.amount, courseId);
+
+  return (
+    <div
+      className="flex items-center gap-3 py-2.5 px-3 rounded-lg hover:bg-muted/50 transition-colors group"
+      onClick={() => setShowDelete(!showDelete)}
+    >
+      <span className="text-xs text-muted-foreground w-10 shrink-0">
+        {formatShortDate(entry.date)}
+      </span>
+      <span className="text-lg shrink-0">{entry.icon}</span>
+      <span className="text-sm flex-1 min-w-0 truncate">{entry.label}</span>
+      <span className="text-sm text-muted-foreground shrink-0">
+        {formatYen(entry.amount)}
+      </span>
+      <span className="text-base font-bold text-red-500 shrink-0 min-w-[90px] text-right">
+        + {formatYen(fv)}
+      </span>
+      {showDelete && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(entry.id!);
+          }}
+          className="shrink-0 p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
+      )}
+    </div>
+  );
+}
