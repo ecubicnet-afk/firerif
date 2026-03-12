@@ -11,7 +11,7 @@ import { Ledger } from "@/components/dream/Ledger";
 import { StampEditor } from "@/components/dream/StampEditor";
 import { Sparkles } from "lucide-react";
 
-export default function DreamBudgetPage() {
+export default function DreamPage() {
   const { entries, addEntry, deleteEntry, loading: savingsLoading } = useSavings();
   const { dream, saveDream, loading: dreamLoading } = useDream();
   const {
@@ -40,10 +40,9 @@ export default function DreamBudgetPage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6 pb-8">
-      {/* Page header */}
       <div>
         <div className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-primary" />
+          <Sparkles className="h-5 w-5 text-amber-500" />
           <h1 className="text-2xl font-bold">節約ドリーム</h1>
         </div>
         <p className="text-muted-foreground mt-1 text-sm">
@@ -51,7 +50,6 @@ export default function DreamBudgetPage() {
         </p>
       </div>
 
-      {/* Block 1: Dream View */}
       <DreamView
         dream={dream}
         entries={entries}
@@ -59,7 +57,6 @@ export default function DreamBudgetPage() {
         onSaveDream={saveDream}
       />
 
-      {/* Block 2: Stamp Pad */}
       <StampPad
         stamps={stamps}
         courseId={courseId}
@@ -67,7 +64,6 @@ export default function DreamBudgetPage() {
         onEditStamps={() => setStampEditorOpen(true)}
       />
 
-      {/* Block 3: Ledger */}
       <Ledger
         entries={entries}
         courseId={courseId}
@@ -77,7 +73,6 @@ export default function DreamBudgetPage() {
         onDeleteEntry={deleteEntry}
       />
 
-      {/* Stamp Editor Modal */}
       {stampEditorOpen && (
         <StampEditor
           stamps={stamps}

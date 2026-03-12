@@ -9,6 +9,7 @@ import {
   Radio,
   MessageCircleQuestion,
   Wallet,
+  Sparkles,
   TrendingUp,
   Target,
   CheckSquare,
@@ -21,6 +22,7 @@ const navItems = [
   { href: "/live", label: "ライブ配信", icon: Radio },
   { href: "/qa", label: "Q&A", icon: MessageCircleQuestion },
   { href: "/budget", label: "家計簿", icon: Wallet },
+  { href: "/dream", label: "節約ドリーム", icon: Sparkles },
   { href: "/assets", label: "資産管理", icon: TrendingUp },
   { href: "/vision", label: "ビジョンボード", icon: Target },
   { href: "/todos", label: "ToDoリスト", icon: CheckSquare },
@@ -63,7 +65,7 @@ export function MobileNav() {
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t bg-background">
       <div className="flex overflow-x-auto">
-        {navItems.slice(0, 5).map((item) => {
+        {navItems.slice(0, 6).map((item) => {
           const isActive =
             pathname === item.href || pathname.startsWith(item.href + "/");
           return (
@@ -71,7 +73,7 @@ export function MobileNav() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex flex-1 flex-col items-center gap-1 py-2 text-xs min-w-[64px]",
+                "flex flex-1 flex-col items-center gap-1 py-2 text-xs min-w-[56px]",
                 isActive ? "text-primary" : "text-muted-foreground"
               )}
             >
