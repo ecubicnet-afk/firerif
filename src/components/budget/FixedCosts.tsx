@@ -48,6 +48,7 @@ export function FixedCosts({ year, month, mergedEntries, customCategories, onAdd
   const [editMemo, setEditMemo] = useState("");
   const [editEndDate, setEditEndDate] = useState("");
   const [saving, setSaving] = useState(false);
+  const [isAddMode, setIsAddMode] = useState(false);
   const [addingCustom, setAddingCustom] = useState(false);
   const [customName, setCustomName] = useState("");
 
@@ -65,6 +66,7 @@ export function FixedCosts({ year, month, mergedEntries, customCategories, onAdd
     setEditAmount(entry ? String(entry.amount) : "");
     setEditDay(entry ? String(entry.day) : "1");
     setEditMemo(entry?.memo || "");
+    setIsAddMode(!entry);
     if (entry?.endDate) {
       const d = new Date(entry.endDate);
       setEditEndDate(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
@@ -79,6 +81,7 @@ export function FixedCosts({ year, month, mergedEntries, customCategories, onAdd
     setEditDay("");
     setEditMemo("");
     setEditEndDate("");
+    setIsAddMode(false);
   }
 
   async function handleSaveTemplate(category: string) {
@@ -242,24 +245,26 @@ export function FixedCosts({ year, month, mergedEntries, customCategories, onAdd
                       )}
                     </div>
                     <div className="flex gap-1.5 flex-wrap">
+                      {!isAddMode && (
+                        <Button
+                          size="sm"
+                          className="h-7 text-xs flex-1"
+                          onClick={() => handleSaveTemplate(cat)}
+                          disabled={saving || !editAmount}
+                        >
+                          <RefreshCw className="h-3 w-3 mr-1" />
+                          毎月に設定
+                        </Button>
+                      )}
                       <Button
                         size="sm"
-                        className="h-7 text-xs flex-1"
-                        onClick={() => handleSaveTemplate(cat)}
-                        disabled={saving || !editAmount}
-                      >
-                        <RefreshCw className="h-3 w-3 mr-1" />
-                        毎月に設定
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
+                        variant={isAddMode ? "default" : "outline"}
                         className="h-7 text-xs flex-1"
                         onClick={() => handleSaveThisMonth(cat)}
                         disabled={saving || !editAmount}
                       >
                         <Pencil className="h-3 w-3 mr-1" />
-                        今月だけ
+                        {isAddMode ? "今月に追加" : "今月だけ"}
                       </Button>
                       <Button
                         size="sm"

@@ -59,6 +59,7 @@ function TemplateSection({
   const [editDay, setEditDay] = useState("");
   const [editMemo, setEditMemo] = useState("");
   const [saving, setSaving] = useState(false);
+  const [isAddMode, setIsAddMode] = useState(false);
 
   const byCat: Record<string, MergedEntry[]> = {};
   for (const e of mergedEntries) {
@@ -72,6 +73,7 @@ function TemplateSection({
     setEditAmount(entry ? String(entry.amount) : "");
     setEditDay(entry ? String(entry.day) : "1");
     setEditMemo(entry?.memo || "");
+    setIsAddMode(!entry);
   }
 
   function cancelEdit() {
@@ -79,6 +81,7 @@ function TemplateSection({
     setEditAmount("");
     setEditDay("");
     setEditMemo("");
+    setIsAddMode(false);
   }
 
   async function handleSaveTemplate(category: string) {
@@ -218,24 +221,26 @@ function TemplateSection({
                       </div>
                     </div>
                     <div className="flex gap-1.5 flex-wrap">
+                      {!isAddMode && (
+                        <Button
+                          size="sm"
+                          className="h-7 text-xs flex-1"
+                          onClick={() => handleSaveTemplate(cat)}
+                          disabled={saving || !editAmount}
+                        >
+                          <RefreshCw className="h-3 w-3 mr-1" />
+                          毎月に設定
+                        </Button>
+                      )}
                       <Button
                         size="sm"
-                        className="h-7 text-xs flex-1"
-                        onClick={() => handleSaveTemplate(cat)}
-                        disabled={saving || !editAmount}
-                      >
-                        <RefreshCw className="h-3 w-3 mr-1" />
-                        毎月に設定
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
+                        variant={isAddMode ? "default" : "outline"}
                         className="h-7 text-xs flex-1"
                         onClick={() => handleSaveThisMonth(cat)}
                         disabled={saving || !editAmount}
                       >
                         <Pencil className="h-3 w-3 mr-1" />
-                        今月だけ
+                        {isAddMode ? "今月に追加" : "今月だけ"}
                       </Button>
                       <Button
                         size="sm"

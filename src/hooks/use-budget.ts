@@ -153,38 +153,34 @@ export function useBudget() {
   }
 
   // Merge templates with entries for a given set of categories and type
-  // Returns MergedEntry[] for each category
+  // Returns MergedEntry[] for each category — both template and entries are included
   function getMergedEntries(categories: readonly string[], type: "INCOME" | "EXPENSE" | "SAVING"): MergedEntry[] {
     const result: MergedEntry[] = [];
     for (const cat of categories) {
-      // Check if there are actual entries for this month+category
+      // Always include template if it exists
+      const tmpl = templates.find(t => t.type === type && t.category === cat);
+      if (tmpl) {
+        result.push({
+          category: tmpl.category,
+          amount: tmpl.amount,
+          day: tmpl.day,
+          memo: tmpl.memo,
+          source: "template",
+          templateId: tmpl.id,
+          endDate: tmpl.endDate,
+        });
+      }
+      // Also include any month-specific entries
       const monthEntries = entries.filter(e => e.type === type && e.category === cat);
-      if (monthEntries.length > 0) {
-        // Use actual entries (override)
-        for (const e of monthEntries) {
-          result.push({
-            category: e.category,
-            amount: e.amount,
-            day: e.day,
-            memo: e.memo,
-            source: "entry",
-            entryId: e.id,
-          });
-        }
-      } else {
-        // Check for template
-        const tmpl = templates.find(t => t.type === type && t.category === cat);
-        if (tmpl) {
-          result.push({
-            category: tmpl.category,
-            amount: tmpl.amount,
-            day: tmpl.day,
-            memo: tmpl.memo,
-            source: "template",
-            templateId: tmpl.id,
-            endDate: tmpl.endDate,
-          });
-        }
+      for (const e of monthEntries) {
+        result.push({
+          category: e.category,
+          amount: e.amount,
+          day: e.day,
+          memo: e.memo,
+          source: "entry",
+          entryId: e.id,
+        });
       }
     }
     return result;
