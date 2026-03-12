@@ -8,7 +8,7 @@ export const LIVING_EXPENSE_CATEGORIES = [
 ] as const;
 
 export const FIXED_COST_CATEGORIES = [
-  "住居費", "電気代", "ガス代", "水道代", "通信費", "保険",
+  "住居費", "電気代", "ガス代", "水道代", "通信費", "保険", "ローン返済",
 ] as const;
 
 export const SPECIAL_EXPENSE_CATEGORIES = [

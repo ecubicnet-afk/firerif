@@ -31,6 +31,7 @@ export interface BudgetTemplate {
   type: "INCOME" | "EXPENSE" | "SAVING";
   day: number;
   memo: string | null;
+  endDate: string | null;
 }
 
 // A merged view: either from a real entry or from a template
@@ -42,6 +43,7 @@ export interface MergedEntry {
   source: "template" | "entry";
   entryId?: string;
   templateId?: string;
+  endDate?: string | null;
 }
 
 // Categories that use templates (fixed costs + income + savings)
@@ -133,7 +135,7 @@ export function useBudget() {
   async function addTemplate(data: {
     category: string; amount: number;
     type: "INCOME" | "EXPENSE" | "SAVING";
-    day?: number; memo?: string;
+    day?: number; memo?: string; endDate?: string | null;
   }) {
     await fetch("/api/budget/template", {
       method: "POST",
@@ -178,6 +180,7 @@ export function useBudget() {
             memo: tmpl.memo,
             source: "template",
             templateId: tmpl.id,
+            endDate: tmpl.endDate,
           });
         }
       }

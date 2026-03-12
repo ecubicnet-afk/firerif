@@ -24,7 +24,7 @@ interface Props {
   onAddTemplate: (data: {
     category: string; amount: number;
     type: "INCOME" | "EXPENSE" | "SAVING";
-    day?: number; memo?: string;
+    day?: number; memo?: string; endDate?: string | null;
   }) => Promise<void>;
   onDeleteTemplate: (id: string) => Promise<void>;
 }
