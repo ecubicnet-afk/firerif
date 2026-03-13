@@ -9,7 +9,7 @@ interface VisionItem {
   id: string;
   title: string;
   description: string | null;
-  imageUrl: string | null;
+  hasImage: boolean;
   targetDate: string | null;
   targetAmount: number | null;
   sortOrder: number;
@@ -23,7 +23,7 @@ function daysUntil(dateStr: string): number {
   return Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 }
 
-// Pin color palette — cycles through 5 warm colors
+// Pin color palette — cycles through 5 colors
 const PIN_COLORS = [
   { from: "from-red-400", to: "to-red-600", border: "border-red-700/30", shadow: "shadow-red-900/30" },
   { from: "from-blue-400", to: "to-blue-600", border: "border-blue-700/30", shadow: "shadow-blue-900/30" },
@@ -76,18 +76,18 @@ export function VisionCard({
       </div>
 
       {/* Card body */}
-      <div className="rounded-lg overflow-hidden bg-[#faf6f0] dark:bg-[#3a3530] border border-[#e8dcc8] dark:border-[#554e44] shadow-[2px_4px_12px_rgba(0,0,0,0.15)] hover:shadow-[4px_8px_20px_rgba(0,0,0,0.2)] transition-shadow duration-300 bg-paper">
+      <div className="rounded-lg overflow-hidden bg-card border shadow-[2px_4px_12px_rgba(0,0,0,0.1)] hover:shadow-[4px_8px_20px_rgba(0,0,0,0.15)] transition-shadow duration-300">
 
         {/* Image */}
-        {item.imageUrl ? (
+        {item.hasImage ? (
           <div className={`relative overflow-hidden ${isFeature ? "aspect-[16/10]" : "aspect-video"}`}>
             {/* Shimmer skeleton */}
             {!imageLoaded && (
-              <div className="absolute inset-0 bg-gradient-to-r from-amber-100 via-amber-50 to-amber-100 dark:from-amber-900/30 dark:via-amber-800/20 dark:to-amber-900/30 animate-pulse" />
+              <div className="absolute inset-0 bg-muted animate-pulse" />
             )}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={item.imageUrl}
+              src={`/api/vision/${item.id}/image`}
               alt={item.title}
               loading="lazy"
               onLoad={() => setImageLoaded(true)}
@@ -112,13 +112,13 @@ export function VisionCard({
         ) : (
           <div className={`${isFeature ? "p-8" : "p-5"} flex flex-col justify-center min-h-[120px]`}>
             <div className="flex items-center gap-2 mb-2">
-              <Flame className={`${isFeature ? "w-7 h-7" : "w-5 h-5"} text-amber-600`} />
-              <h3 className={`font-bold text-amber-900 dark:text-amber-200 ${isFeature ? "text-2xl" : "text-lg"}`}>
+              <Flame className={`${isFeature ? "w-7 h-7" : "w-5 h-5"} text-primary`} />
+              <h3 className={`font-bold ${isFeature ? "text-2xl" : "text-lg"}`}>
                 {item.title}
               </h3>
             </div>
             {item.description && (
-              <p className="text-amber-800/70 dark:text-amber-300/70 text-sm line-clamp-3">
+              <p className="text-muted-foreground text-sm line-clamp-3">
                 {item.description}
               </p>
             )}
@@ -133,7 +133,7 @@ export function VisionCard({
                 ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
                 : days <= 30
                   ? "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400"
-                  : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+                  : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
             }`}>
               <Calendar className="w-3 h-3" />
               {isAchieved ? "達成日到来!" : `あと${days}日`}
@@ -141,7 +141,7 @@ export function VisionCard({
           )}
 
           {item.targetAmount && (
-            <div className="flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+            <div className="flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full bg-secondary text-secondary-foreground">
               <Coins className="w-3 h-3" />
               目標: {formatYen(item.targetAmount)}
             </div>
@@ -152,7 +152,7 @@ export function VisionCard({
           <button
             onClick={() => onDelete(item.id)}
             aria-label={`${item.title}を削除`}
-            className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30 text-amber-400 hover:text-red-500"
+            className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
           >
             <Trash2 className="w-3.5 h-3.5" />
           </button>
@@ -161,12 +161,12 @@ export function VisionCard({
         {/* Progress bar */}
         {item.targetAmount && (
           <div className="px-4 pb-3">
-            <div className="w-full h-1.5 rounded-full bg-amber-200/50 dark:bg-amber-800/30 overflow-hidden">
+            <div className="w-full h-1.5 rounded-full bg-secondary overflow-hidden">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: "30%" }}
                 transition={{ duration: 1, delay: 0.3 + index * 0.1 }}
-                className="h-full rounded-full bg-gradient-to-r from-amber-500 to-amber-600"
+                className="h-full rounded-full bg-primary"
               />
             </div>
           </div>

@@ -12,9 +12,23 @@ export async function GET() {
   const items = await prisma.visionItem.findMany({
     where: { userId: session.user.id },
     orderBy: { sortOrder: "asc" },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      imageUrl: true,
+      targetDate: true,
+      targetAmount: true,
+      sortOrder: true,
+    },
   });
 
-  return NextResponse.json(items);
+  const result = items.map(({ imageUrl, ...rest }) => ({
+    ...rest,
+    hasImage: !!imageUrl,
+  }));
+
+  return NextResponse.json(result);
 }
 
 export async function POST(request: Request) {

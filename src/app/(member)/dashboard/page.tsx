@@ -12,6 +12,7 @@ import {
   Sparkles,
   TrendingUp,
   Target,
+  CalendarRange,
   CheckSquare,
   Users,
   CreditCard,
@@ -25,6 +26,7 @@ const quickLinks = [
   { href: "/dream", label: "節約ドリーム", icon: Sparkles, color: "text-amber-500" },
   { href: "/assets", label: "資産管理", icon: TrendingUp, color: "text-orange-500" },
   { href: "/vision", label: "ビジョンボード", icon: Target, color: "text-pink-500" },
+  { href: "/life-plan", label: "ライフプラン", icon: CalendarRange, color: "text-teal-500" },
   { href: "/todos", label: "ToDoリスト", icon: CheckSquare, color: "text-cyan-500" },
   { href: "/community", label: "コミュニティ", icon: Users, color: "text-indigo-500" },
 ];
