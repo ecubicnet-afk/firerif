@@ -15,24 +15,24 @@ export function EmptyState({ onAdd }: { onAdd: () => void }) {
       <motion.div
         animate={{ scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] }}
         transition={{ duration: 3, repeat: Infinity, repeatType: "reverse" }}
-        className="w-24 h-24 rounded-3xl bg-gradient-to-br from-amber-400/20 to-blue-400/20 backdrop-blur-sm border border-white/30 flex items-center justify-center mb-6"
+        className="w-24 h-24 rounded-lg bg-[#faf6f0] dark:bg-[#3a3530] border border-[#e8dcc8] dark:border-[#554e44] shadow-md bg-paper flex items-center justify-center mb-6"
       >
         <Sparkles className="w-10 h-10 text-amber-500" />
       </motion.div>
-      <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2">
-        理想の未来を描こう
+      <h3 className="text-xl font-bold text-amber-950 dark:text-amber-200 mb-2">
+        理想の未来をピン留めしよう
       </h3>
-      <p className="text-sm text-slate-500 dark:text-slate-400 text-center max-w-md mb-6">
+      <p className="text-sm text-amber-900/60 dark:text-amber-300/60 text-center max-w-md mb-6">
         FIRE後にやりたいこと、手に入れたいものを
-        ビジョンボードに追加しましょう。
+        コルクボードにピン留めしましょう。
         毎日眺めることで、目標達成への意欲が高まります。
       </p>
       <Button
         onClick={onAdd}
-        className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg shadow-amber-500/25"
+        className="bg-gradient-to-r from-amber-700 to-amber-600 hover:from-amber-800 hover:to-amber-700 text-white shadow-lg shadow-amber-800/25"
       >
         <Plus className="w-4 h-4 mr-1.5" />
-        最初のビジョンを追加
+        最初のビジョンをピン留め
       </Button>
     </motion.div>
   );
