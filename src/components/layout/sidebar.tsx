@@ -14,6 +14,7 @@ import {
   Target,
   CheckSquare,
   Users,
+  CalendarRange,
 } from "lucide-react";
 
 const navItems = [
@@ -25,6 +26,7 @@ const navItems = [
   { href: "/dream", label: "節約ドリーム", icon: Sparkles },
   { href: "/assets", label: "資産管理", icon: TrendingUp },
   { href: "/vision", label: "ビジョンボード", icon: Target },
+  { href: "/life-plan", label: "ライフプラン", icon: CalendarRange },
   { href: "/todos", label: "ToDoリスト", icon: CheckSquare },
   { href: "/community", label: "コミュニティ", icon: Users },
 ];
