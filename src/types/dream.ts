@@ -17,6 +17,7 @@ export interface Stamp {
   categoryId: string;
   sortOrder: number;
   isDefault: boolean;
+  notificationMessage?: string;
 }
 
 export interface DreamGoal {
@@ -28,7 +29,7 @@ export interface DreamGoal {
 }
 
 export interface Course {
-  id: 'aggressive' | 'standard' | 'conservative';
+  id: 'aggressive' | 'standard' | 'balanced' | 'conservative';
   label: string;
   icon: string;
   multiplier: number;

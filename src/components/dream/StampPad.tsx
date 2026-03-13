@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Check, Settings } from "lucide-react";
 import { formatYen } from "@/lib/utils";
-import { futureValue, futureValue50 } from "@/lib/dream-calc";
+import { futureValue, futureValue50, multiplierForYears } from "@/lib/dream-calc";
+import { COURSES_MAP } from "@/lib/dream-constants";
 import type { Stamp, SavingsEntry, CourseId } from "@/types/dream";
 import { CustomInput } from "./CustomInput";
 
@@ -19,6 +20,10 @@ interface StampPadProps {
 export function StampPad({ stamps, courseId, onSave, onEditStamps }: StampPadProps) {
   const [tappedId, setTappedId] = useState<number | null>(null);
   const [showCustom, setShowCustom] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const course = COURSES_MAP[courseId];
+  const mult20 = multiplierForYears(course.annualRate, 20);
 
   const handleStampTap = useCallback(
     async (stamp: Stamp) => {
@@ -38,6 +43,12 @@ export function StampPad({ stamps, courseId, onSave, onEditStamps }: StampPadPro
 
       // Haptic feedback
       if (navigator.vibrate) navigator.vibrate(50);
+
+      // Show reframing toast message
+      if (stamp.notificationMessage) {
+        setToastMessage(stamp.notificationMessage);
+        setTimeout(() => setToastMessage(null), 4000);
+      }
 
       setTimeout(() => setTappedId(null), 600);
     },
@@ -75,11 +86,12 @@ export function StampPad({ stamps, courseId, onSave, onEditStamps }: StampPadPro
         </p>
       </CardHeader>
       <CardContent className="space-y-3">
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           {stamps.map((stamp) => {
             const isTapped = tappedId === stamp.id;
             const fv = futureValue(stamp.amount, courseId);
             const fv50 = futureValue50(stamp.amount, courseId);
+            const ratio = Math.round(mult20 * 10) / 10;
             return (
               <button
                 key={stamp.id}
@@ -102,6 +114,9 @@ export function StampPad({ stamps, courseId, onSave, onEditStamps }: StampPadPro
                 <span className="text-2xl">{stamp.icon}</span>
                 <span className="text-xs font-medium">{stamp.label}</span>
                 <span className="text-sm font-bold">{formatYen(stamp.amount)}</span>
+                <span className="inline-block px-1.5 py-0.5 rounded-full bg-gradient-to-r from-red-500 to-amber-500 text-white text-[9px] font-bold">
+                  {ratio}倍に成長
+                </span>
                 <span className="text-[10px] text-red-500 font-bold">
                   → 20年後 {formatYen(fv)}
                 </span>
@@ -126,6 +141,15 @@ export function StampPad({ stamps, courseId, onSave, onEditStamps }: StampPadPro
             onSave={handleCustomSave}
             onCancel={() => setShowCustom(false)}
           />
+        )}
+
+        {/* Reframing toast message */}
+        {toastMessage && (
+          <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 p-3 rounded-lg bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30 border border-blue-200 dark:border-blue-800">
+            <p className="text-sm text-blue-900 dark:text-blue-100 font-medium">
+              🎁 {toastMessage}
+            </p>
+          </div>
         )}
       </CardContent>
     </Card>

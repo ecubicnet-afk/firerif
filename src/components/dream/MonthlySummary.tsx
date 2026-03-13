@@ -2,7 +2,7 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { formatYen } from "@/lib/utils";
-import { totalFutureValue, totalFutureValue50, totalSavings } from "@/lib/dream-calc";
+import { totalFutureValue, totalFutureValue50, totalSavings, multiplierForYears } from "@/lib/dream-calc";
 import { COURSES_MAP } from "@/lib/dream-constants";
 import type { SavingsEntry, CourseId } from "@/types/dream";
 import { TrendingUp, Wallet } from "lucide-react";
@@ -18,6 +18,8 @@ export function MonthlySummary({ entries, courseId, label }: MonthlySummaryProps
   const future = totalFutureValue(entries, courseId);
   const future50 = totalFutureValue50(entries, courseId);
   const course = COURSES_MAP[courseId];
+  const mult20 = Math.round(multiplierForYears(course.annualRate, 20) * 10) / 10;
+  const mult50 = Math.round(multiplierForYears(course.annualRate, 50) * 10) / 10;
 
   return (
     <Card>
@@ -51,7 +53,7 @@ export function MonthlySummary({ entries, courseId, label }: MonthlySummaryProps
           </div>
         </div>
         <p className="text-[10px] text-muted-foreground mt-2">
-          ※{course.indexName}（年利{(course.annualRate * 100).toFixed(0)}%）で20年後{course.multiplier.toFixed(1)}倍・50年後{course.multiplier50.toFixed(1)}倍換算
+          ※{course.indexName}（年利{(course.annualRate * 100).toFixed(0)}%）で複利計算：20年後{mult20}倍・50年後{mult50}倍換算
         </p>
       </CardContent>
     </Card>
