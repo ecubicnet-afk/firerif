@@ -120,3 +120,40 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 |---------|---------|
 | `src/app/(member)/assets/page.tsx` | 全面リニューアル |
 | `README.md` | 設計書追記（本セクション） |
+
+---
+
+## ビジョンボード v3 — コルクボード化 + 画像最適化
+
+### 設計概要
+
+ビジョンボードをグラスモーフィズムUI → コルクボード風UIに刷新。夢や目標を「ピン留め」するメタファーで没入感を実現。
+
+### 主な改善点
+
+| カテゴリ | 改善内容 |
+|---------|---------|
+| **ビジュアル** | CSSグラデーションによるコルクテクスチャ背景（画像不要）、紙テクスチャカード |
+| **ピン装飾** | HTML/CSSで5色ローテーションのプッシュピン、光沢ハイライト付き |
+| **レイアウト** | カードにランダム風回転（±3度、indexベース決定論的）、3列レスポンシブグリッド |
+| **画像最適化** | Canvas APIでアップロード時圧縮（max 1200px幅、JPEG 0.8品質）、10MBまで受付 |
+| **体感速度** | Shimmerスケルトン（animate-pulse）で画像ロード中のUX改善 |
+| **アクセシビリティ** | alt属性にタイトル自動設定、ピン装飾にaria-hidden、削除ボタンにaria-label |
+| **ダークモード** | コルク背景・紙テクスチャのダーク版を完備 |
+
+### 修正ファイル
+
+| ファイル | 変更 |
+|---------|------|
+| `src/app/globals.css` | `.bg-cork`, `.bg-paper` CSSユーティリティ追加 |
+| `src/components/vision-board/VisionCard.tsx` | ピン装飾、回転、紙テクスチャ、shimmerスケルトン |
+| `src/components/vision-board/VisionForm.tsx` | Canvas圧縮関数、10MBアップロード対応、コルクボードスタイル |
+| `src/app/(member)/vision/page.tsx` | コルクボード背景、3列グリッド、テキスト更新 |
+| `src/components/vision-board/EmptyState.tsx` | コルクボードテーマ統一 |
+
+### 技術詳細
+
+- **コルクテクスチャ**: 5層のCSS radial-gradient重ね合わせで実現（外部画像不要）
+- **画像圧縮**: `canvas.toDataURL("image/jpeg", 0.8)` — 2MB超時は0.5品質でリトライ
+- **ピン色**: `[red, blue, emerald, amber, purple]` を `index % 5` でサイクル
+- **回転角度**: `((index * 7 + 3) % 7) - 3` で -3〜+3度の決定論的分散

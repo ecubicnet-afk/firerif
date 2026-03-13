@@ -64,24 +64,23 @@ export default function VisionPage() {
 
   return (
     <div className="min-h-screen relative">
-      {/* FIRE-themed gradient background */}
-      <div className="fixed inset-0 -z-10 bg-gradient-to-br from-amber-50 via-orange-50/50 to-blue-50 dark:from-slate-950 dark:via-amber-950/20 dark:to-blue-950/30" />
-      <div className="fixed inset-0 -z-10 opacity-30 dark:opacity-20 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-amber-200 via-transparent to-blue-200" />
+      {/* Cork board background */}
+      <div className="fixed inset-0 -z-10 bg-cork" />
 
       <ConfettiEffect trigger={confetti} />
 
-      <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
+      <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <h1 className="text-3xl font-extrabold bg-gradient-to-r from-amber-600 via-orange-500 to-blue-600 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-extrabold bg-gradient-to-r from-amber-950 via-amber-800 to-amber-700 bg-clip-text text-transparent drop-shadow-sm">
             ビジョンボード
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            FIREした後の理想の生活を描いて、毎日眺めよう
+          <p className="text-sm text-amber-900/70 dark:text-amber-200/70 mt-1">
+            FIREした後の理想の生活をコルクボードにピン留めしよう
           </p>
         </motion.div>
 
@@ -90,10 +89,10 @@ export default function VisionPage() {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <Button
               onClick={() => setShowForm(true)}
-              className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg shadow-amber-500/20"
+              className="bg-gradient-to-r from-amber-700 to-amber-600 hover:from-amber-800 hover:to-amber-700 text-white shadow-lg shadow-amber-800/20"
             >
               <Plus className="w-4 h-4 mr-1.5" />
-              ビジョンを追加
+              ビジョンをピン留め
             </Button>
           </motion.div>
         )}
@@ -113,7 +112,7 @@ export default function VisionPage() {
           <EmptyState onAdd={() => setShowForm(true)} />
         ) : (
           <AnimatePresence>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 pt-2">
               {items.map((item, index) => (
                 <VisionCard
                   key={item.id}
