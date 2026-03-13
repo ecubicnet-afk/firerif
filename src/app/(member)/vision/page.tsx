@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus } from "lucide-react";
+import { Plus, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { VisionCard } from "@/components/vision-board/VisionCard";
 import { VisionForm } from "@/components/vision-board/VisionForm";
@@ -13,7 +13,7 @@ interface VisionItem {
   id: string;
   title: string;
   description: string | null;
-  imageUrl: string | null;
+  hasImage: boolean;
   targetDate: string | null;
   targetAmount: number | null;
   sortOrder: number;
@@ -64,9 +64,6 @@ export default function VisionPage() {
 
   return (
     <div className="min-h-screen relative">
-      {/* Cork board background */}
-      <div className="fixed inset-0 -z-10 bg-cork" />
-
       <ConfettiEffect trigger={confetti} />
 
       <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">
@@ -76,10 +73,11 @@ export default function VisionPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <h1 className="text-3xl font-extrabold bg-gradient-to-r from-amber-950 via-amber-800 to-amber-700 bg-clip-text text-transparent drop-shadow-sm">
-            ビジョンボード
-          </h1>
-          <p className="text-sm text-amber-900/70 dark:text-amber-200/70 mt-1">
+          <div className="flex items-center gap-2">
+            <Target className="h-5 w-5 text-primary" />
+            <h1 className="text-2xl font-bold">ビジョンボード</h1>
+          </div>
+          <p className="text-muted-foreground mt-1 text-sm">
             FIREした後の理想の生活をコルクボードにピン留めしよう
           </p>
         </motion.div>
@@ -87,10 +85,7 @@ export default function VisionPage() {
         {/* Add button */}
         {loaded && items.length > 0 && !showForm && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <Button
-              onClick={() => setShowForm(true)}
-              className="bg-gradient-to-r from-amber-700 to-amber-600 hover:from-amber-800 hover:to-amber-700 text-white shadow-lg shadow-amber-800/20"
-            >
+            <Button onClick={() => setShowForm(true)}>
               <Plus className="w-4 h-4 mr-1.5" />
               ビジョンをピン留め
             </Button>

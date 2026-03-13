@@ -128,11 +128,11 @@ export function VisionForm({ onSubmit, onCancel }: VisionFormProps) {
       initial={{ opacity: 0, y: 20, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: -10, scale: 0.98 }}
-      className="rounded-lg bg-[#faf6f0] dark:bg-[#3a3530] border border-[#e8dcc8] dark:border-[#554e44] shadow-xl overflow-hidden bg-paper"
+      className="rounded-lg bg-card border shadow-xl overflow-hidden"
     >
       <div className="p-6">
-        <h3 className="text-lg font-bold text-amber-900 dark:text-amber-200 mb-4 flex items-center gap-2">
-          <span className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-600 to-amber-800 flex items-center justify-center text-white text-sm">
+        <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+          <span className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground text-sm">
             +
           </span>
           新しいビジョン
@@ -141,7 +141,7 @@ export function VisionForm({ onSubmit, onCancel }: VisionFormProps) {
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Title */}
           <div className="space-y-1.5">
-            <Label htmlFor="v-title" className="text-xs font-bold text-amber-800 dark:text-amber-300">
+            <Label htmlFor="v-title" className="text-xs font-bold">
               タイトル
             </Label>
             <Input
@@ -150,13 +150,12 @@ export function VisionForm({ onSubmit, onCancel }: VisionFormProps) {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
-              className="bg-white/80 dark:bg-white/5 border-[#d4c4a8] dark:border-[#554e44] focus:border-amber-500 transition-colors"
             />
           </div>
 
           {/* Description */}
           <div className="space-y-1.5">
-            <Label htmlFor="v-desc" className="text-xs font-bold text-amber-800 dark:text-amber-300">
+            <Label htmlFor="v-desc" className="text-xs font-bold">
               詳細
             </Label>
             <Textarea
@@ -165,22 +164,22 @@ export function VisionForm({ onSubmit, onCancel }: VisionFormProps) {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={2}
-              className="bg-white/80 dark:bg-white/5 border-[#d4c4a8] dark:border-[#554e44] focus:border-amber-500 transition-colors resize-none"
+              className="resize-none"
             />
           </div>
 
           {/* Image upload area */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <Label className="text-xs font-bold text-amber-800 dark:text-amber-300">画像</Label>
+              <Label className="text-xs font-bold">画像</Label>
               <div className="flex gap-1">
                 <button
                   type="button"
                   onClick={() => setImageMode("drop")}
                   className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors ${
                     imageMode === "drop"
-                      ? "bg-amber-600/20 text-amber-800 dark:text-amber-300"
-                      : "text-amber-600/50 hover:text-amber-700"
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   <Upload className="w-3 h-3 inline mr-0.5" />
@@ -191,8 +190,8 @@ export function VisionForm({ onSubmit, onCancel }: VisionFormProps) {
                   onClick={() => setImageMode("url")}
                   className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors ${
                     imageMode === "url"
-                      ? "bg-amber-600/20 text-amber-800 dark:text-amber-300"
-                      : "text-amber-600/50 hover:text-amber-700"
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   <Link className="w-3 h-3 inline mr-0.5" />
@@ -208,10 +207,10 @@ export function VisionForm({ onSubmit, onCancel }: VisionFormProps) {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="rounded-lg border-2 border-dashed border-amber-300 dark:border-amber-700 p-8 text-center"
+                  className="rounded-lg border-2 border-dashed border-border p-8 text-center"
                 >
-                  <Loader2 className="w-8 h-8 mx-auto mb-2 text-amber-500 animate-spin" />
-                  <p className="text-xs text-amber-700 dark:text-amber-400">画像を圧縮中...</p>
+                  <Loader2 className="w-8 h-8 mx-auto mb-2 text-primary animate-spin" />
+                  <p className="text-xs text-muted-foreground">画像を圧縮中...</p>
                 </motion.div>
               ) : hasPreview ? (
                 <motion.div
@@ -248,16 +247,16 @@ export function VisionForm({ onSubmit, onCancel }: VisionFormProps) {
                   className={`
                     cursor-pointer rounded-lg border-2 border-dashed p-6 text-center transition-all
                     ${dragOver
-                      ? "border-amber-500 bg-amber-50/50 dark:bg-amber-500/10"
-                      : "border-[#d4c4a8] dark:border-[#554e44] hover:border-amber-400 hover:bg-amber-50/30 dark:hover:bg-amber-900/10"
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/50 hover:bg-muted/50"
                     }
                   `}
                 >
-                  <ImageIcon className="w-8 h-8 mx-auto mb-2 text-amber-400" />
-                  <p className="text-xs text-amber-700 dark:text-amber-400">
+                  <ImageIcon className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                  <p className="text-xs text-muted-foreground">
                     ドラッグ&ドロップ または クリックして画像を選択
                   </p>
-                  <p className="text-[10px] text-amber-500/70 mt-1">JPG, PNG (10MBまで・自動圧縮)</p>
+                  <p className="text-[10px] text-muted-foreground/70 mt-1">JPG, PNG (10MBまで・自動圧縮)</p>
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -272,7 +271,6 @@ export function VisionForm({ onSubmit, onCancel }: VisionFormProps) {
                     placeholder="https://..."
                     value={imageUrl}
                     onChange={(e) => setImageUrl(e.target.value)}
-                    className="bg-white/80 dark:bg-white/5 border-[#d4c4a8] dark:border-[#554e44]"
                   />
                 </motion.div>
               )}
@@ -282,7 +280,7 @@ export function VisionForm({ onSubmit, onCancel }: VisionFormProps) {
           {/* Date & Amount */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="v-date" className="text-xs font-bold text-amber-800 dark:text-amber-300">
+              <Label htmlFor="v-date" className="text-xs font-bold">
                 目標日
               </Label>
               <Input
@@ -290,11 +288,10 @@ export function VisionForm({ onSubmit, onCancel }: VisionFormProps) {
                 type="date"
                 value={targetDate}
                 onChange={(e) => setTargetDate(e.target.value)}
-                className="bg-white/80 dark:bg-white/5 border-[#d4c4a8] dark:border-[#554e44]"
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="v-amount" className="text-xs font-bold text-amber-800 dark:text-amber-300">
+              <Label htmlFor="v-amount" className="text-xs font-bold">
                 目標金額（円）
               </Label>
               <Input
@@ -303,7 +300,6 @@ export function VisionForm({ onSubmit, onCancel }: VisionFormProps) {
                 placeholder="0"
                 value={targetAmount}
                 onChange={(e) => setTargetAmount(e.target.value)}
-                className="bg-white/80 dark:bg-white/5 border-[#d4c4a8] dark:border-[#554e44]"
               />
             </div>
           </div>
@@ -313,11 +309,10 @@ export function VisionForm({ onSubmit, onCancel }: VisionFormProps) {
             <Button
               type="submit"
               disabled={loading || !title || compressing}
-              className="bg-gradient-to-r from-amber-700 to-amber-600 hover:from-amber-800 hover:to-amber-700 text-white shadow-lg shadow-amber-700/20"
             >
               {loading ? "保存中..." : "ピン留めする"}
             </Button>
-            <Button type="button" variant="ghost" onClick={onCancel} className="text-amber-700 dark:text-amber-400">
+            <Button type="button" variant="ghost" onClick={onCancel}>
               キャンセル
             </Button>
           </div>
