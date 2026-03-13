@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { formatYen, formatShortDate } from "@/lib/utils";
-import { futureValue, futureValue50 } from "@/lib/dream-calc";
+import { futureValue, futureValue50, multiplierForYears } from "@/lib/dream-calc";
+import { COURSES_MAP } from "@/lib/dream-constants";
 import { Trash2 } from "lucide-react";
 import type { SavingsEntry, CourseId } from "@/types/dream";
 
@@ -16,6 +17,8 @@ export function LedgerRow({ entry, courseId, onDelete }: LedgerRowProps) {
   const [showDelete, setShowDelete] = useState(false);
   const fv = futureValue(entry.amount, courseId);
   const fv50 = futureValue50(entry.amount, courseId);
+  const course = COURSES_MAP[courseId];
+  const ratio20 = Math.round(multiplierForYears(course.annualRate, 20) * 10) / 10;
 
   return (
     <div
@@ -29,6 +32,9 @@ export function LedgerRow({ entry, courseId, onDelete }: LedgerRowProps) {
       <span className="text-sm flex-1 min-w-0 truncate">{entry.label}</span>
       <span className="text-sm text-muted-foreground shrink-0">
         {formatYen(entry.amount)}
+      </span>
+      <span className="inline-block px-1 py-0.5 rounded text-[9px] font-bold bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 shrink-0">
+        ×{ratio20}
       </span>
       <span className="text-sm font-bold text-red-500 shrink-0 min-w-[80px] text-right">
         + {formatYen(fv)}

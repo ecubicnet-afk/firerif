@@ -202,10 +202,10 @@ export function StampEditor({
               variant="outline"
               className="w-full"
               onClick={() => { setAdding(true); setEditingId(null); }}
-              disabled={stamps.length >= 12}
+              disabled={stamps.length >= 24}
             >
               <Plus className="h-4 w-4 mr-1" />
-              スタンプを追加{stamps.length >= 12 && "（上限12個）"}
+              スタンプを追加{stamps.length >= 24 && "（上限24個）"}
             </Button>
           ) : (
             <div className="space-y-3 p-3 rounded-lg border">
