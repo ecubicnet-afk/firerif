@@ -24,41 +24,53 @@ db.version(2).stores({
   dream: "id",
 });
 
-export async function seedDefaultStamps() {
-  const count = await db.stamps.count();
+// Prevent concurrent execution (React strict mode / double mount)
+let seedPromise: Promise<void> | null = null;
 
-  // Fresh user: seed all defaults
-  if (count === 0) {
-    await db.stamps.bulkAdd(DEFAULT_STAMPS as Stamp[]);
-    if (typeof localStorage !== "undefined") {
-      localStorage.setItem(STAMPS_VERSION_KEY, String(STAMPS_VERSION));
-    }
-    return;
-  }
+export function seedDefaultStamps(): Promise<void> {
+  if (seedPromise) return seedPromise;
+  seedPromise = doSeed().finally(() => { seedPromise = null; });
+  return seedPromise;
+}
 
-  // Existing user: check if defaults need upgrading
-  if (typeof localStorage !== "undefined") {
-    const stored = parseInt(localStorage.getItem(STAMPS_VERSION_KEY) || "0", 10);
-    if (stored < STAMPS_VERSION) {
-      // Replace only default stamps, preserve user-created custom stamps
-      const existing = await db.stamps.toArray();
-      const customStamps = existing.filter((s) => !s.isDefault);
-      await db.stamps.clear();
-      // Re-add new defaults
+async function doSeed() {
+  // Use a Dexie transaction to ensure atomicity
+  await db.transaction("rw", db.stamps, async () => {
+    const count = await db.stamps.count();
+
+    // Fresh user: seed all defaults
+    if (count === 0) {
       await db.stamps.bulkAdd(DEFAULT_STAMPS as Stamp[]);
-      // Re-add custom stamps with updated sortOrder
-      if (customStamps.length > 0) {
-        const offset = DEFAULT_STAMPS.length;
-        const reindexed = customStamps.map((s, i) => ({
-          ...s,
-          id: undefined,
-          sortOrder: offset + i,
-        }));
-        await db.stamps.bulkAdd(reindexed as Stamp[]);
+      if (typeof localStorage !== "undefined") {
+        localStorage.setItem(STAMPS_VERSION_KEY, String(STAMPS_VERSION));
       }
-      localStorage.setItem(STAMPS_VERSION_KEY, String(STAMPS_VERSION));
+      return;
     }
-  }
+
+    // Existing user: check if defaults need upgrading
+    if (typeof localStorage !== "undefined") {
+      const stored = parseInt(localStorage.getItem(STAMPS_VERSION_KEY) || "0", 10);
+      if (stored < STAMPS_VERSION) {
+        // Replace only default stamps, preserve user-created custom stamps
+        const existing = await db.stamps.toArray();
+        const customStamps = existing.filter((s) => !s.isDefault);
+        await db.stamps.clear();
+        // Re-add new defaults
+        await db.stamps.bulkAdd(DEFAULT_STAMPS as Stamp[]);
+        // Re-add custom stamps with updated sortOrder
+        if (customStamps.length > 0) {
+          const offset = DEFAULT_STAMPS.length;
+          const reindexed = customStamps.map((s, i) => ({
+            ...s,
+            id: undefined,
+            sortOrder: offset + i,
+          }));
+          await db.stamps.bulkAdd(reindexed as Stamp[]);
+        }
+        localStorage.setItem(STAMPS_VERSION_KEY, String(STAMPS_VERSION));
+      }
+    }
+  });
 }
 
 export { db };
