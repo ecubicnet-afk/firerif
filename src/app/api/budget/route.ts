@@ -33,9 +33,22 @@ export async function POST(request: Request) {
 
   const { year, month, day, category, amount, type, memo, imageData } = await request.json();
 
+  const VALID_TYPES = ["EXPENSE", "INCOME", "SAVING", "FIXED_COST"];
   if (!category || amount === undefined || !type) {
     return NextResponse.json(
       { error: "必須項目を入力してください" },
+      { status: 400 }
+    );
+  }
+  if (typeof amount !== "number" || !isFinite(amount) || amount < 0 || amount > 100_000_000) {
+    return NextResponse.json(
+      { error: "金額は0以上1億以下の数値を入力してください" },
+      { status: 400 }
+    );
+  }
+  if (!VALID_TYPES.includes(type)) {
+    return NextResponse.json(
+      { error: "無効なタイプです" },
       { status: 400 }
     );
   }

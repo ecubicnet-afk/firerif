@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Check, Settings } from "lucide-react";
 import { formatYen } from "@/lib/utils";
-import { futureValue } from "@/lib/dream-calc";
+import { futureValue, futureValue50 } from "@/lib/dream-calc";
 import type { Stamp, SavingsEntry, CourseId } from "@/types/dream";
 import { CustomInput } from "./CustomInput";
 
@@ -79,6 +79,7 @@ export function StampPad({ stamps, courseId, onSave, onEditStamps }: StampPadPro
           {stamps.map((stamp) => {
             const isTapped = tappedId === stamp.id;
             const fv = futureValue(stamp.amount, courseId);
+            const fv50 = futureValue50(stamp.amount, courseId);
             return (
               <button
                 key={stamp.id}
@@ -103,6 +104,9 @@ export function StampPad({ stamps, courseId, onSave, onEditStamps }: StampPadPro
                 <span className="text-sm font-bold">{formatYen(stamp.amount)}</span>
                 <span className="text-[10px] text-red-500 font-bold">
                   → 20年後 {formatYen(fv)}
+                </span>
+                <span className="text-[10px] text-purple-500 font-bold">
+                  → 50年後 {formatYen(fv50)}
                 </span>
               </button>
             );

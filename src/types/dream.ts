@@ -32,6 +32,7 @@ export interface Course {
   label: string;
   icon: string;
   multiplier: number;
+  multiplier50: number;
   annualRate: number;
   indexName: string;
   color: string;

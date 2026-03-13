@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { formatYen, formatShortDate } from "@/lib/utils";
-import { futureValue } from "@/lib/dream-calc";
+import { futureValue, futureValue50 } from "@/lib/dream-calc";
 import { Trash2 } from "lucide-react";
 import type { SavingsEntry, CourseId } from "@/types/dream";
 
@@ -15,6 +15,7 @@ interface LedgerRowProps {
 export function LedgerRow({ entry, courseId, onDelete }: LedgerRowProps) {
   const [showDelete, setShowDelete] = useState(false);
   const fv = futureValue(entry.amount, courseId);
+  const fv50 = futureValue50(entry.amount, courseId);
 
   return (
     <div
@@ -29,8 +30,11 @@ export function LedgerRow({ entry, courseId, onDelete }: LedgerRowProps) {
       <span className="text-sm text-muted-foreground shrink-0">
         {formatYen(entry.amount)}
       </span>
-      <span className="text-base font-bold text-red-500 shrink-0 min-w-[90px] text-right">
+      <span className="text-sm font-bold text-red-500 shrink-0 min-w-[80px] text-right">
         + {formatYen(fv)}
+      </span>
+      <span className="text-sm font-bold text-purple-500 shrink-0 min-w-[80px] text-right">
+        + {formatYen(fv50)}
       </span>
       {showDelete && (
         <button

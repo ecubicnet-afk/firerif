@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Pencil, Target } from "lucide-react";
 import { formatYen } from "@/lib/utils";
-import { totalFutureValue, dreamProgress, blurLevel } from "@/lib/dream-calc";
+import { totalFutureValue, totalFutureValue50, dreamProgress, blurLevel } from "@/lib/dream-calc";
 import type { DreamGoal, SavingsEntry, CourseId } from "@/types/dream";
 import { DreamEditor } from "./DreamEditor";
 
@@ -20,6 +20,7 @@ export function DreamView({ dream, entries, courseId, onSaveDream }: DreamViewPr
   const [editorOpen, setEditorOpen] = useState(false);
 
   const totalFV = totalFutureValue(entries, courseId);
+  const totalFV50 = totalFutureValue50(entries, courseId);
   const progress = dream ? dreamProgress(totalFV, dream.targetAmount) : 0;
   const blur = blurLevel(progress);
   const progressPct = Math.min(Math.round(progress * 100), 100);
@@ -117,9 +118,14 @@ export function DreamView({ dream, entries, courseId, onSaveDream }: DreamViewPr
               />
             </div>
             {!isCompleted && (
-              <p className="text-xs text-muted-foreground mt-1.5">
-                {dream.title}まであと {formatYen(remaining)}（20年後換算）
-              </p>
+              <div className="mt-1.5 space-y-0.5">
+                <p className="text-xs text-muted-foreground">
+                  {dream.title}まであと {formatYen(remaining)}（20年後換算）
+                </p>
+                <p className="text-xs text-purple-500">
+                  50年後換算: {formatYen(totalFV50)}
+                </p>
+              </div>
             )}
           </div>
         </div>

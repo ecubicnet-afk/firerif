@@ -22,6 +22,7 @@ const memberPaths = [
   "/vision",
   "/todos",
   "/community",
+  "/dream",
 ];
 
 export async function middleware(request: NextRequest) {
