@@ -146,6 +146,7 @@ export default function AssetsPage() {
   const [usdJpyRate, setUsdJpyRate] = useState(150);
   const [isRateLoading, setIsRateLoading] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [uploadStatus, setUploadStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
   // --- Aggregation ---
   const aggregatedStats = useMemo(() => {
@@ -327,10 +328,39 @@ export default function AssetsPage() {
 
   // --- CSV Parsing ---
   const parseFileContent = useCallback((text: string, fileName: string): AccountDataset | null => {
+    // Check for garbled text (Shift-JIS read as UTF-8 or vice versa)
+    if (text.includes("\ufffd") || text.includes("ï¿½")) {
+      console.warn("[CSV] Garbled characters detected, may need different encoding");
+      return null;
+    }
+
     const lines = text.split(/\r?\n/).map((l) => l.trim()).filter((l) => l !== "");
+    if (lines.length < 2) {
+      console.warn("[CSV] File too short:", lines.length, "lines");
+      return null;
+    }
+
     let items: HoldingItem[] = [];
     let totalValueFromHeader = 0;
     const isSBI = text.includes("保有証券一覧");
+
+    const NAME_KEYS = ["ファンド名", "銘柄名称", "銘柄名", "銘柄", "ファンド"];
+    const VALUE_KEYS = ["評価額", "時価評価額", "評価金額"];
+    const COST_KEYS = ["取得金額", "取得価額", "買付金額"];
+    const PROFIT_KEYS = ["評価損益", "損益", "評価損益（税引前）"];
+
+    const findKey = (obj: Record<string, string>, keys: string[]) => {
+      for (const k of keys) {
+        if (obj[k] !== undefined && obj[k] !== "") return obj[k];
+      }
+      // Partial match fallback
+      for (const k of Object.keys(obj)) {
+        for (const target of keys) {
+          if (k.includes(target) || target.includes(k)) return obj[k];
+        }
+      }
+      return "";
+    };
 
     if (isSBI) {
       let currentNisaType = "特定/一般";
@@ -342,20 +372,28 @@ export default function AssetsPage() {
         const norm = toHalfWidth(line);
         const isSection =
           (norm.startsWith("投資信託（") || norm.startsWith("株式（") ||
-            norm.startsWith("投資信託(") || norm.startsWith("株式(")) &&
-          cells.filter((c) => c !== "").length <= 2;
+            norm.startsWith("投資信託(") || norm.startsWith("株式(") ||
+            norm.includes("投資信託（") || norm.includes("株式（")) &&
+          cells.filter((c) => c !== "").length <= 3;
         if (isSection) {
           if (norm.includes("成長投資枠")) currentNisaType = "NISA成長";
           else if (norm.includes("つみたて投資枠")) currentNisaType = "NISAつみたて";
-          else if (norm.includes("NISA預り")) currentNisaType = "NISA";
+          else if (norm.includes("NISA預り") || norm.includes("NISA")) currentNisaType = "NISA";
           isReadingData = false;
           continue;
         }
+        // Header detection: partial match instead of exact match
         const headerFound = cells.some((c) => {
           const h = toHalfWidth(c).trim();
-          return h === "ファンド名" || h === "銘柄名称" || h === "銘柄名";
+          return NAME_KEYS.some((k) => h.includes(k) || k.includes(h));
         });
-        if (headerFound) {
+        if (headerFound && cells.some((c) => VALUE_KEYS.some((k) => toHalfWidth(c).includes(k)))) {
+          headers = cells.map((c) => toHalfWidth(c).trim());
+          isReadingData = true;
+          continue;
+        }
+        // Also detect header if name key matches alone (some CSVs don't have 評価額 in same header)
+        if (!isReadingData && headerFound) {
           headers = cells.map((c) => toHalfWidth(c).trim());
           isReadingData = true;
           continue;
@@ -363,17 +401,18 @@ export default function AssetsPage() {
         if (isReadingData && cells.length >= 3 && cells[0] !== "" && !cells[0].includes("合計")) {
           const obj: Record<string, string> = {};
           headers.forEach((h, idx) => {
-            if (h) obj[h] = cells[idx];
+            if (h) obj[h] = cells[idx] || "";
           });
-          const name = obj["ファンド名"] || obj["銘柄名称"] || obj["銘柄名"] || obj["銘柄"];
-          const marketValue = parseNumber(obj["評価額"] || obj["時価評価額"]);
-          const purchaseAmount = parseNumber(obj["取得金額"] || obj["取得価額"]);
+          const name = findKey(obj, NAME_KEYS);
+          const marketValue = parseNumber(findKey(obj, VALUE_KEYS));
+          const purchaseAmount = parseNumber(findKey(obj, COST_KEYS));
+          const profit = parseNumber(findKey(obj, PROFIT_KEYS));
           if (name && marketValue > 0) {
             items.push({
               source: fileName,
               name,
               marketValue,
-              profit: parseNumber(obj["評価損益"]) || marketValue - purchaseAmount,
+              profit: profit || marketValue - purchaseAmount,
               nisaType: currentNisaType,
               assetType: "",
               region: "",
@@ -382,42 +421,55 @@ export default function AssetsPage() {
         }
       }
     } else {
-      // 楽天証券等
+      // 楽天証券等 + 汎用パーサー
       for (const line of lines) {
         const c = splitCSVLine(line);
         if (c[0] === "資産合計") totalValueFromHeader = parseNumber(c[1]);
       }
-      const hIdx = lines.findIndex(
-        (l) =>
-          (l.includes("銘柄") || l.includes("ファンド")) &&
-          (l.includes("評価額") || l.includes("時価評価額"))
-      );
-      if (hIdx !== -1) {
-        const h = splitCSVLine(lines[hIdx]);
+      // Find header line: look for a line containing both a name key and a value key
+      const hIdx = lines.findIndex((l) => {
+        const norm = toHalfWidth(l);
+        const hasName = NAME_KEYS.some((k) => norm.includes(k));
+        const hasValue = VALUE_KEYS.some((k) => norm.includes(k));
+        return hasName && hasValue;
+      });
+      // Fallback: find header with just a name key
+      const hIdxFallback = hIdx === -1
+        ? lines.findIndex((l) => {
+            const norm = toHalfWidth(l);
+            return NAME_KEYS.some((k) => norm.includes(k)) && l.includes(",");
+          })
+        : hIdx;
+      const finalHIdx = hIdx !== -1 ? hIdx : hIdxFallback;
+
+      if (finalHIdx !== -1) {
+        const h = splitCSVLine(lines[finalHIdx]).map((c) => toHalfWidth(c).trim());
         items = lines
-          .slice(hIdx + 1)
+          .slice(finalHIdx + 1)
           .filter((l) => l.includes(","))
           .map((line) => {
             const c = splitCSVLine(line);
             const o: Record<string, string> = {};
-            h.forEach((head, i) => (o[head] = c[i]));
-            const n = o["銘柄"] || o["銘柄名"] || o["ファンド"];
+            h.forEach((head, i) => (o[head] = c[i] || ""));
+            const n = findKey(o, NAME_KEYS);
             if (!n) return null;
             let nt = "特定/一般";
-            const ai = o["口座"] || o["預り区分"] || o["口座区分"] || "";
+            const ai = o["口座"] || o["預り区分"] || o["口座区分"] || o["勘定"] || "";
             if (ai.includes("つみたて")) nt = "NISAつみたて";
             else if (ai.includes("成長") || ai.includes("NISA")) nt = "NISA成長";
             return {
               source: fileName,
               name: n,
-              marketValue: parseNumber(o["評価額"] || o["時価評価額"]),
-              profit: parseNumber(o["評価損益"]),
+              marketValue: parseNumber(findKey(o, VALUE_KEYS)),
+              profit: parseNumber(findKey(o, PROFIT_KEYS)),
               nisaType: nt,
               assetType: "",
               region: "",
             };
           })
           .filter((i): i is HoldingItem => i !== null && i.marketValue > 0);
+      } else {
+        console.warn("[CSV] No header row found. First 3 lines:", lines.slice(0, 3));
       }
     }
 
@@ -438,7 +490,10 @@ export default function AssetsPage() {
       return { ...i, assetType: at, region: reg };
     });
 
-    if (items.length === 0) return null;
+    if (items.length === 0) {
+      console.warn("[CSV] No items extracted from", fileName, "| Lines:", lines.length, "| SBI:", isSBI);
+      return null;
+    }
 
     return {
       fileName,
@@ -451,24 +506,70 @@ export default function AssetsPage() {
   const handleCSVUpload = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const files = Array.from(e.target.files || []);
+      if (files.length === 0) return;
+
+      setUploadStatus(null);
+
       files.forEach((f) => {
+        const tryParse = (text: string, encoding: string) => {
+          const res = parseFileContent(text, f.name);
+          if (res) return res;
+          console.warn(`[CSV] Parse failed with ${encoding} for ${f.name}`);
+          return null;
+        };
+
         const reader = new FileReader();
         reader.onload = async (ev) => {
           const text = ev.target?.result as string;
-          const res = parseFileContent(text, f.name);
-          if (res) {
-            setAccountDatasets((prev) => [...prev.filter((p) => p.fileName !== f.name), res]);
-            // Save to DB
+          let res = tryParse(text, "Shift-JIS");
+
+          // Retry with UTF-8 if Shift-JIS failed
+          if (!res) {
+            const utf8Reader = new FileReader();
+            utf8Reader.onload = async (ev2) => {
+              const text2 = ev2.target?.result as string;
+              res = tryParse(text2, "UTF-8");
+              if (res) {
+                setAccountDatasets((prev) => [...prev.filter((p) => p.fileName !== f.name), res!]);
+                try {
+                  await fetch("/api/assets/holdings", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ source: f.name, items: res.items, cash: res.cash }),
+                  });
+                  setUploadStatus({ type: "success", message: `${res.items.length}件の銘柄を取り込みました` });
+                } catch {
+                  setUploadStatus({ type: "error", message: "データの保存に失敗しました" });
+                }
+              } else {
+                setUploadStatus({ type: "error", message: `${f.name}: CSVの形式を確認してください（対応形式: SBI証券・楽天証券の保有証券CSV）` });
+              }
+            };
+            utf8Reader.readAsText(f, "UTF-8");
+            return;
+          }
+
+          setAccountDatasets((prev) => [...prev.filter((p) => p.fileName !== f.name), res!]);
+          try {
             await fetch("/api/assets/holdings", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ source: f.name, items: res.items, cash: res.cash }),
             });
+            setUploadStatus({ type: "success", message: `${res.items.length}件の銘柄を取り込みました` });
+          } catch {
+            setUploadStatus({ type: "error", message: "データの保存に失敗しました" });
           }
+        };
+        reader.onerror = () => {
+          setUploadStatus({ type: "error", message: `${f.name}: ファイルの読み込みに失敗しました` });
         };
         reader.readAsText(f, "Shift-JIS");
       });
       e.target.value = "";
+
+      // Auto-clear status after 5s
+      setTimeout(() => setUploadStatus(null), 5000);
     },
     [parseFileContent]
   );
@@ -640,6 +741,16 @@ export default function AssetsPage() {
               <input type="file" multiple accept=".csv" className="hidden" onChange={handleCSVUpload} />
             </label>
           </div>
+          {uploadStatus && (
+            <div className={`mt-3 p-3 rounded-lg text-sm font-medium ${
+              uploadStatus.type === "success"
+                ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                : "bg-rose-50 text-rose-700 border border-rose-200"
+            }`}>
+              {uploadStatus.type === "success" ? <CheckCircle2 className="w-4 h-4 inline mr-1.5" /> : null}
+              {uploadStatus.message}
+            </div>
+          )}
           {accountDatasets.length > 0 && (
             <div className="mt-4 pt-4 border-t">
               <div className="flex items-center gap-2 mb-2">
