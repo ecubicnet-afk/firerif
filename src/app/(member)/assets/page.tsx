@@ -1,16 +1,18 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, Legend, AreaChart, Area, BarChart, Bar, LabelList
+  PieChart, Pie, Cell, Legend, AreaChart, Area, BarChart, Bar,
 } from "recharts";
 import {
   Upload, Save, Activity, CheckCircle2,
   Trash2, Sparkles, Loader2, List,
   ShieldCheck, TrendingUp, Globe,
   Banknote, Coins, Table, Layers,
-  RefreshCw, PieChart as PieChartIcon
+  RefreshCw, PieChart as PieChartIcon,
+  ArrowUpRight, ArrowDownRight,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,21 +20,21 @@ import { formatYen } from "@/lib/utils";
 
 // --- Constants ---
 const ASSET_TYPE_COLORS: Record<string, string> = {
-  "投資信託": "#10b981",
-  "株式": "#3b82f6",
-  "ETF": "#f59e0b",
-  "REIT": "#ec4899",
-  "債券": "#8b5cf6",
-  "現金": "#94a3b8",
-  "その他": "#cbd5e1",
+  "投資信託": "#059669",
+  "株式": "#2563eb",
+  "ETF": "#d97706",
+  "REIT": "#db2777",
+  "債券": "#7c3aed",
+  "現金": "#64748b",
+  "その他": "#6b7280",
 };
 
 const REGION_COLORS: Record<string, string> = {
-  "日本": "#3b82f6",
-  "米国": "#ef4444",
-  "全世界": "#8b5cf6",
+  "日本": "#2563eb",
+  "米国": "#dc2626",
+  "全世界": "#7c3aed",
   "現金": "#64748b",
-  "その他の地域": "#cbd5e1",
+  "その他の地域": "#6b7280",
 };
 
 // --- Types ---
@@ -97,42 +99,175 @@ const splitCSVLine = (line: string) => {
   return result.map((v) => v.replace(/^"|"$/g, "").trim());
 };
 
+const truncateName = (name: string, max: number = 18) =>
+  name.length > max ? name.slice(0, max) + "…" : name;
+
 // --- Chart Components ---
 const RADIAN = Math.PI / 180;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const CustomPieLabel = (props: any) => {
-  const { cx, cy, midAngle, outerRadius, percent } = props;
-  if (!percent || percent < 0.01) return null;
-  const radius = (outerRadius || 100) + 32;
+  const { cx, cy, midAngle, outerRadius, percent, name } = props;
+  if (!percent || percent < 0.03) return null;
+  const radius = (outerRadius || 100) + 28;
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
   const y = cy + radius * Math.sin(-midAngle * RADIAN);
   return (
-    <text x={x} y={y} fill="#0f172a" textAnchor={x > cx ? "start" : "end"}
+    <text x={x} y={y} fill="#334155" textAnchor={x > cx ? "start" : "end"}
       dominantBaseline="central"
-      style={{ fontSize: "18px", fontWeight: "900", filter: "drop-shadow(0px 2px 2px rgba(255,255,255,0.8))" }}>
-      {`${(percent * 100).toFixed(1)}%`}
+      style={{ fontSize: "11px", fontWeight: "700" }}>
+      {`${name} ${(percent * 100).toFixed(1)}%`}
     </text>
   );
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const CustomTooltipContent = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    const data = payload[0].payload;
-    return (
-      <div className="bg-slate-900 text-white p-4 rounded-2xl shadow-2xl border border-slate-800">
-        <p className="text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-widest leading-relaxed">
-          {String(label || data.name || "詳細")}
-        </p>
-        <div className="flex items-center justify-between gap-4">
-          <span className="text-xs font-bold" style={{ color: payload[0].color || payload[0].fill }}>評価額:</span>
-          <span className="text-xs font-mono font-black">¥{Number(payload[0].value).toLocaleString()}</span>
+const EnhancedTooltip = ({ active, payload, label }: any) => {
+  if (!active || !payload?.length) return null;
+  const data = payload[0].payload;
+  return (
+    <div className="bg-slate-900/95 backdrop-blur-sm text-white px-4 py-3 rounded-xl shadow-2xl border border-slate-700/50">
+      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
+        {String(label || data.name || "詳細")}
+      </p>
+      {payload.map((p: { name: string; value: number; color?: string; fill?: string }, i: number) => (
+        <div key={i} className="flex items-center justify-between gap-6 text-xs">
+          <span className="font-medium" style={{ color: p.color || p.fill || "#94a3b8" }}>
+            {p.name}
+          </span>
+          <span className="font-mono font-bold">¥{Math.round(Number(p.value)).toLocaleString()}</span>
         </div>
-      </div>
-    );
-  }
-  return null;
+      ))}
+    </div>
+  );
 };
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const HistoryTooltip = ({ active, payload, label }: any) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="bg-slate-900/95 backdrop-blur-sm text-white px-4 py-3 rounded-xl shadow-2xl border border-slate-700/50">
+      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">{label}</p>
+      {payload.map((p: { name: string; value: number; color?: string; stroke?: string }, i: number) => (
+        <div key={i} className="flex items-center justify-between gap-6 text-xs">
+          <span className="font-medium" style={{ color: p.color || p.stroke || "#94a3b8" }}>{p.name}</span>
+          <span className="font-mono font-bold">¥{Math.round(Number(p.value)).toLocaleString()}</span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// --- Animated number ---
+function AnimatedValue({ value, className }: { value: string; className?: string }) {
+  return (
+    <motion.span
+      key={value}
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className={className}
+    >
+      {value}
+    </motion.span>
+  );
+}
+
+// --- Stat Card ---
+function StatCard({
+  label, value, subValue, icon: Icon, accent, className, delay = 0,
+}: {
+  label: string;
+  value: string;
+  subValue?: string;
+  icon: React.ElementType;
+  accent: string;
+  className?: string;
+  delay?: number;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay }}
+    >
+      <Card className={`overflow-hidden ${className || ""}`}>
+        <CardContent className="p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${accent}`}>
+              <Icon className="w-3.5 h-3.5 text-white" />
+            </div>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{label}</p>
+          </div>
+          <AnimatedValue value={value} className="text-xl font-black font-mono block" />
+          {subValue && (
+            <p className="text-[11px] font-bold text-muted-foreground mt-0.5">{subValue}</p>
+          )}
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+}
+
+// --- Mobile Card View for Holdings ---
+function HoldingCard({
+  item, index,
+}: {
+  item: { name: string; region: string; assetType: string; nisaTypeDisplay: string; weight: number; cost: number; marketValue: number; profit: number; profitRate: number };
+  index: number;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay: index * 0.03 }}
+    >
+      <Card className="overflow-hidden">
+        <CardContent className="p-4">
+          <div className="flex items-start justify-between mb-2">
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold truncate">{item.name}</p>
+              <div className="flex gap-1 mt-1 flex-wrap">
+                <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                  item.region === "全世界" ? "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400" :
+                  item.region === "米国" ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" :
+                  item.region === "日本" ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" :
+                  "bg-muted text-muted-foreground"
+                }`}>{item.region}</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-900 text-white dark:bg-slate-700">{item.nisaTypeDisplay}</span>
+                <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                  item.assetType === "ETF" ? "bg-amber-100 text-amber-700" :
+                  item.assetType === "債券" ? "bg-violet-100 text-violet-700" :
+                  item.assetType === "株式" ? "bg-blue-100 text-blue-700" :
+                  "bg-emerald-100 text-emerald-700"
+                }`}>{item.assetType}</span>
+              </div>
+            </div>
+            <span className="px-2.5 py-1 bg-slate-900 text-white text-xs font-black font-mono rounded-lg dark:bg-slate-700">
+              {item.weight.toFixed(1)}%
+            </span>
+          </div>
+          <div className="grid grid-cols-3 gap-2 text-xs mt-3 pt-3 border-t">
+            <div>
+              <p className="text-muted-foreground text-[10px] mb-0.5">取得額</p>
+              <p className="font-mono font-medium">{formatYen(item.cost)}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground text-[10px] mb-0.5">評価額</p>
+              <p className="font-mono font-bold">{formatYen(item.marketValue)}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-muted-foreground text-[10px] mb-0.5">損益</p>
+              <p className={`font-mono font-bold ${item.profit >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                {item.profit >= 0 ? "+" : ""}{formatYen(item.profit)}
+              </p>
+              <p className="text-[10px] font-mono text-muted-foreground">({item.profitRate.toFixed(2)}%)</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+}
 
 // --- Main Component ---
 export default function AssetsPage() {
@@ -229,10 +364,19 @@ export default function AssetsPage() {
       .slice(0, 10)
       .map((item) => ({
         ...item,
+        shortName: truncateName(item.name),
         displayValue: `¥${Math.floor(item.marketValue).toLocaleString()}`,
         fill: REGION_COLORS[item.region] || REGION_COLORS["その他の地域"],
       }));
   }, [consolidatedData]);
+
+  // History chart with purchase line
+  const historyChartData = useMemo(() => {
+    return history.map((h) => ({
+      ...h,
+      displayDate: h.date.slice(5), // MM-DD
+    }));
+  }, [history]);
 
   // --- Handlers ---
   const fetchRate = useCallback(async () => {
@@ -328,7 +472,6 @@ export default function AssetsPage() {
 
   // --- CSV Parsing ---
   const parseFileContent = useCallback((text: string, fileName: string): AccountDataset | null => {
-    // Check for garbled text (Shift-JIS read as UTF-8 or vice versa)
     if (text.includes("\ufffd") || text.includes("ï¿½")) {
       console.warn("[CSV] Garbled characters detected, may need different encoding");
       return null;
@@ -353,7 +496,6 @@ export default function AssetsPage() {
       for (const k of keys) {
         if (obj[k] !== undefined && obj[k] !== "") return obj[k];
       }
-      // Partial match fallback
       for (const k of Object.keys(obj)) {
         for (const target of keys) {
           if (k.includes(target) || target.includes(k)) return obj[k];
@@ -382,7 +524,6 @@ export default function AssetsPage() {
           isReadingData = false;
           continue;
         }
-        // Header detection: partial match instead of exact match
         const headerFound = cells.some((c) => {
           const h = toHalfWidth(c).trim();
           return NAME_KEYS.some((k) => h.includes(k) || k.includes(h));
@@ -392,7 +533,6 @@ export default function AssetsPage() {
           isReadingData = true;
           continue;
         }
-        // Also detect header if name key matches alone (some CSVs don't have 評価額 in same header)
         if (!isReadingData && headerFound) {
           headers = cells.map((c) => toHalfWidth(c).trim());
           isReadingData = true;
@@ -421,19 +561,16 @@ export default function AssetsPage() {
         }
       }
     } else {
-      // 楽天証券等 + 汎用パーサー
       for (const line of lines) {
         const c = splitCSVLine(line);
         if (c[0] === "資産合計") totalValueFromHeader = parseNumber(c[1]);
       }
-      // Find header line: look for a line containing both a name key and a value key
       const hIdx = lines.findIndex((l) => {
         const norm = toHalfWidth(l);
         const hasName = NAME_KEYS.some((k) => norm.includes(k));
         const hasValue = VALUE_KEYS.some((k) => norm.includes(k));
         return hasName && hasValue;
       });
-      // Fallback: find header with just a name key
       const hIdxFallback = hIdx === -1
         ? lines.findIndex((l) => {
             const norm = toHalfWidth(l);
@@ -473,7 +610,6 @@ export default function AssetsPage() {
       }
     }
 
-    // 分類ロジック
     items = items.map((i) => {
       const n = toHalfWidth(i.name).toUpperCase();
       let at = "投資信託";
@@ -523,7 +659,6 @@ export default function AssetsPage() {
           const text = ev.target?.result as string;
           let res = tryParse(text, "Shift-JIS");
 
-          // Retry with UTF-8 if Shift-JIS failed
           if (!res) {
             const utf8Reader = new FileReader();
             utf8Reader.onload = async (ev2) => {
@@ -567,8 +702,6 @@ export default function AssetsPage() {
         reader.readAsText(f, "Shift-JIS");
       });
       e.target.value = "";
-
-      // Auto-clear status after 5s
       setTimeout(() => setUploadStatus(null), 5000);
     },
     [parseFileContent]
@@ -623,21 +756,34 @@ export default function AssetsPage() {
   if (loading) {
     return (
       <div className="max-w-6xl mx-auto flex items-center justify-center py-20">
-        <div className="text-center space-y-3">
-          <Loader2 className="h-8 w-8 mx-auto animate-spin text-muted-foreground" />
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-center space-y-3"
+        >
+          <Loader2 className="h-8 w-8 mx-auto animate-spin text-emerald-500" />
           <p className="text-sm text-muted-foreground">読み込み中...</p>
-        </div>
+        </motion.div>
       </div>
     );
   }
 
+  const profitRate = aggregatedStats.purchaseAmount !== 0
+    ? (aggregatedStats.profit / aggregatedStats.purchaseAmount) * 100
+    : 0;
+
   return (
     <div className="max-w-6xl mx-auto space-y-6 pb-24">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <motion.div
+        initial={{ opacity: 0, y: -12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
+      >
         <div>
           <div className="flex items-center gap-3 mb-1">
-            <div className="bg-emerald-600 p-2 rounded-xl">
+            <div className="bg-gradient-to-br from-emerald-500 to-emerald-700 p-2.5 rounded-xl shadow-lg shadow-emerald-500/20">
               <ShieldCheck className="w-5 h-5 text-white" />
             </div>
             <h1 className="text-xl font-bold">かんたん資産管理</h1>
@@ -675,102 +821,127 @@ export default function AssetsPage() {
             <Activity className="w-4 h-4 mr-1" /> 推移CSV
           </Button>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Key Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 font-mono text-center md:text-left">
-        <Card className="bg-emerald-50 border-emerald-100">
-          <CardContent className="p-4">
-            <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-1">投資元本</p>
-            <p className="text-lg font-black">{formatYen(aggregatedStats.purchaseAmount)}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter mb-1">時価評価額</p>
-            <p className="text-lg font-black">{formatYen(aggregatedStats.equity)}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter mb-1">損益額</p>
-            <p className={`text-lg font-black ${aggregatedStats.profit >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
-              {aggregatedStats.profit >= 0 ? "+" : ""}{formatYen(aggregatedStats.profit)}
-            </p>
-            <p className={`text-[11px] font-bold ${aggregatedStats.profit >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
-              ({((aggregatedStats.profit / (aggregatedStats.purchaseAmount || 1)) * 100).toFixed(2)}%)
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter mb-1">待機資金</p>
-            <p className="text-lg font-black text-muted-foreground">{formatYen(aggregatedStats.cash)}</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-slate-900 text-white">
-          <CardContent className="p-4">
-            <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-tighter mb-1">NISA</p>
-            <p className="text-lg font-black">{formatYen(aggregatedStats.nisaValue)}</p>
-            <p className="text-[11px] text-emerald-400 font-bold">
-              比率: {aggregatedStats.nisaRatio.toFixed(1)}%
-            </p>
-          </CardContent>
-        </Card>
+      {/* Key Stats — Profit card prominent */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <StatCard
+          label="投資元本"
+          value={formatYen(aggregatedStats.purchaseAmount)}
+          icon={Coins}
+          accent="bg-emerald-600"
+          delay={0}
+        />
+        <StatCard
+          label="時価評価額"
+          value={formatYen(aggregatedStats.equity)}
+          icon={TrendingUp}
+          accent="bg-blue-600"
+          delay={0.05}
+        />
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+          className="col-span-2 md:col-span-1"
+        >
+          <Card className={`overflow-hidden border-2 ${aggregatedStats.profit >= 0 ? "border-emerald-200 dark:border-emerald-800" : "border-rose-200 dark:border-rose-800"}`}>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${aggregatedStats.profit >= 0 ? "bg-emerald-600" : "bg-rose-600"}`}>
+                  {aggregatedStats.profit >= 0 ? <ArrowUpRight className="w-3.5 h-3.5 text-white" /> : <ArrowDownRight className="w-3.5 h-3.5 text-white" />}
+                </div>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">損益額</p>
+              </div>
+              <AnimatedValue
+                value={`${aggregatedStats.profit >= 0 ? "+" : ""}${formatYen(aggregatedStats.profit)}`}
+                className={`text-2xl font-black font-mono block ${aggregatedStats.profit >= 0 ? "text-emerald-600" : "text-rose-600"}`}
+              />
+              <p className={`text-xs font-bold mt-0.5 ${aggregatedStats.profit >= 0 ? "text-emerald-500" : "text-rose-500"}`}>
+                {profitRate >= 0 ? "+" : ""}{profitRate.toFixed(2)}%
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
+        <StatCard
+          label="待機資金"
+          value={formatYen(aggregatedStats.cash)}
+          icon={Banknote}
+          accent="bg-slate-500"
+          delay={0.15}
+        />
+        <StatCard
+          label="NISA"
+          value={formatYen(aggregatedStats.nisaValue)}
+          subValue={`比率: ${aggregatedStats.nisaRatio.toFixed(1)}%`}
+          icon={ShieldCheck}
+          accent="bg-slate-900"
+          className="bg-slate-900 text-white [&_p]:text-slate-400 dark:bg-slate-800"
+          delay={0.2}
+        />
       </div>
 
       {/* Upload Area */}
-      <Card className="border-2 border-dashed border-emerald-100 hover:border-emerald-300 transition-all">
-        <CardContent className="p-6">
-          <div className="flex flex-col md:flex-row items-center gap-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-emerald-50 p-3 rounded-xl">
-                <Upload className="w-5 h-5 text-emerald-600" />
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.25 }}>
+        <Card className="border-2 border-dashed border-emerald-200 hover:border-emerald-400 transition-all dark:border-emerald-800 dark:hover:border-emerald-600">
+          <CardContent className="p-6">
+            <div className="flex flex-col md:flex-row items-center gap-4">
+              <div className="flex items-center gap-3">
+                <div className="bg-emerald-50 dark:bg-emerald-900/30 p-3 rounded-xl">
+                  <Upload className="w-5 h-5 text-emerald-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold">CSVファイルを取り込み</p>
+                  <p className="text-xs text-muted-foreground">SBI証券・楽天証券の保有証券CSVに対応</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm font-bold">CSVファイルを取り込み</p>
-                <p className="text-xs text-muted-foreground">SBI証券・楽天証券の保有証券CSVに対応</p>
-              </div>
+              <label className="cursor-pointer">
+                <Button asChild variant="default" size="sm">
+                  <span>
+                    <Upload className="w-4 h-4 mr-1" /> CSV追加
+                  </span>
+                </Button>
+                <input type="file" multiple accept=".csv" className="hidden" onChange={handleCSVUpload} />
+              </label>
             </div>
-            <label className="cursor-pointer">
-              <Button asChild variant="default" size="sm">
-                <span>
-                  <Upload className="w-4 h-4 mr-1" /> CSV追加
-                </span>
-              </Button>
-              <input type="file" multiple accept=".csv" className="hidden" onChange={handleCSVUpload} />
-            </label>
-          </div>
-          {uploadStatus && (
-            <div className={`mt-3 p-3 rounded-lg text-sm font-medium ${
-              uploadStatus.type === "success"
-                ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                : "bg-rose-50 text-rose-700 border border-rose-200"
-            }`}>
-              {uploadStatus.type === "success" ? <CheckCircle2 className="w-4 h-4 inline mr-1.5" /> : null}
-              {uploadStatus.message}
-            </div>
-          )}
-          {accountDatasets.length > 0 && (
-            <div className="mt-4 pt-4 border-t">
-              <div className="flex items-center gap-2 mb-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">取り込み済みデータ</p>
+            <AnimatePresence>
+              {uploadStatus && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className={`mt-3 p-3 rounded-lg text-sm font-medium ${
+                    uploadStatus.type === "success"
+                      ? "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800"
+                      : "bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800"
+                  }`}
+                >
+                  {uploadStatus.type === "success" ? <CheckCircle2 className="w-4 h-4 inline mr-1.5" /> : null}
+                  {uploadStatus.message}
+                </motion.div>
+              )}
+            </AnimatePresence>
+            {accountDatasets.length > 0 && (
+              <div className="mt-4 pt-4 border-t">
+                <div className="flex items-center gap-2 mb-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">取り込み済みデータ</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {accountDatasets.map((d) => (
+                    <div key={d.fileName} className="flex items-center gap-2 bg-muted px-3 py-1.5 rounded-lg text-xs font-mono">
+                      <span className="truncate max-w-[200px]">{d.fileName}</span>
+                      <button onClick={() => removeDataset(d.fileName)} className="text-muted-foreground hover:text-destructive">
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {accountDatasets.map((d) => (
-                  <div key={d.fileName} className="flex items-center gap-2 bg-muted px-3 py-1.5 rounded-lg text-xs font-mono">
-                    <span className="truncate max-w-[200px]">{d.fileName}</span>
-                    <button onClick={() => removeDataset(d.fileName)} className="text-muted-foreground hover:text-destructive">
-                      <Trash2 className="w-3 h-3" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
 
       {/* Tab Navigation */}
       <div className="flex bg-muted p-1 rounded-lg overflow-x-auto gap-1">
@@ -792,270 +963,415 @@ export default function AssetsPage() {
       </div>
 
       {/* Dashboard Tab */}
-      {activeTab === "dashboard" && aggregatedStats.equity > 0 && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <AnimatePresence mode="wait">
+        {activeTab === "dashboard" && aggregatedStats.equity > 0 && (
+          <motion.div
+            key="dashboard"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="space-y-6"
+          >
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Region Mix */}
+              <motion.div initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}>
+                <Card>
+                  <CardContent className="p-6">
+                    <h4 className="font-bold text-sm mb-6 flex items-center gap-2">
+                      <Globe className="w-4 h-4 text-indigo-500" /> 地域別配分
+                    </h4>
+                    <div className="h-[320px] w-full relative">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie data={regionMix} dataKey="value" nameKey="name" cx="50%" cy="45%"
+                            innerRadius={65} outerRadius={95} paddingAngle={4}
+                            label={CustomPieLabel} labelLine={false}
+                            animationBegin={0} animationDuration={800}>
+                            {regionMix.map((entry, index) => (
+                              <Cell key={index} fill={REGION_COLORS[entry.name] || REGION_COLORS["その他の地域"]} strokeWidth={0} />
+                            ))}
+                          </Pie>
+                          <Tooltip content={<EnhancedTooltip />} />
+                          <Legend verticalAlign="bottom"
+                            formatter={(v: string) => {
+                              const item = regionMix.find((r) => r.name === v);
+                              return <span className="text-xs font-bold">{v} {item ? `(${(item.percent * 100).toFixed(1)}%)` : ""}</span>;
+                            }}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                      <div className="absolute top-[38%] left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
+                        <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">合計</p>
+                        <p className="text-base font-black font-mono">{formatYen(aggregatedStats.equity)}</p>
+                        <p className="text-[10px] text-muted-foreground">{consolidatedData.length}銘柄</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              {/* Asset Type Mix */}
+              <motion.div initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15 }}>
+                <Card>
+                  <CardContent className="p-6">
+                    <h4 className="font-bold text-sm mb-6 flex items-center gap-2">
+                      <Layers className="w-4 h-4 text-emerald-500" /> 資産種別配分
+                    </h4>
+                    <div className="h-[320px] w-full relative">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie data={assetTypeMix} dataKey="value" nameKey="name" cx="50%" cy="45%"
+                            innerRadius={65} outerRadius={95} paddingAngle={4}
+                            label={CustomPieLabel} labelLine={false}
+                            animationBegin={0} animationDuration={800}>
+                            {assetTypeMix.map((entry, index) => (
+                              <Cell key={index} fill={ASSET_TYPE_COLORS[entry.name] || ASSET_TYPE_COLORS["その他"]} strokeWidth={0} />
+                            ))}
+                          </Pie>
+                          <Tooltip content={<EnhancedTooltip />} />
+                          <Legend verticalAlign="bottom"
+                            formatter={(v: string) => {
+                              const item = assetTypeMix.find((a) => a.name === v);
+                              return <span className="text-xs font-bold">{v} {item ? `(${(item.percent * 100).toFixed(1)}%)` : ""}</span>;
+                            }}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </div>
+
+            {/* Top 10 — Horizontal bar chart (labels on Y axis, no overlap) */}
+            {top10Data.length > 0 && (
+              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+                <Card>
+                  <CardContent className="p-6">
+                    <h4 className="font-bold text-sm mb-6 flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4" /> Top {top10Data.length} 保有銘柄
+                    </h4>
+                    <div style={{ height: Math.max(300, top10Data.length * 48) }} className="w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart
+                          data={top10Data}
+                          layout="vertical"
+                          margin={{ left: 0, right: 100, top: 8, bottom: 8 }}
+                        >
+                          <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                          <XAxis type="number" hide />
+                          <YAxis
+                            dataKey="shortName"
+                            type="category"
+                            width={140}
+                            tick={{ fontSize: 11, fontWeight: 600, fill: "#334155" }}
+                            tickLine={false}
+                            axisLine={false}
+                          />
+                          <Tooltip content={<EnhancedTooltip />} />
+                          <Bar
+                            dataKey="marketValue"
+                            radius={[0, 6, 6, 0]}
+                            barSize={24}
+                            animationDuration={800}
+                          >
+                            {top10Data.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={REGION_COLORS[entry.region] || REGION_COLORS["その他の地域"]} />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+          </motion.div>
+        )}
+
+        {activeTab === "dashboard" && aggregatedStats.equity === 0 && (
+          <motion.div key="dashboard-empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <Card>
-              <CardContent className="p-6">
-                <h4 className="font-bold text-sm mb-6 flex items-center gap-2">
-                  <Globe className="w-4 h-4 text-indigo-500" /> 地域別配分
-                </h4>
-                <div className="h-[350px] w-full relative">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie data={regionMix} dataKey="value" nameKey="name" cx="50%" cy="50%"
-                        innerRadius={70} outerRadius={100} paddingAngle={5}
-                        label={CustomPieLabel} labelLine={false}>
-                        {regionMix.map((entry, index) => (
-                          <Cell key={index} fill={REGION_COLORS[entry.name] || REGION_COLORS["その他の地域"]} strokeWidth={0} />
-                        ))}
-                      </Pie>
-                      <Tooltip content={<CustomTooltipContent />} />
-                      <Legend verticalAlign="bottom" formatter={(v: string) => <span className="text-xs font-bold">{v}</span>} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div className="absolute top-[40%] left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">合計</p>
-                    <p className="text-lg font-black font-mono">{formatYen(aggregatedStats.equity)}</p>
+              <CardContent className="p-12 text-center text-muted-foreground">
+                <PieChartIcon className="w-12 h-12 mx-auto mb-4 opacity-30" />
+                <p className="text-sm font-bold">CSVファイルを取り込むとポートフォリオ分析が表示されます</p>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Holdings Tab */}
+        {activeTab === "holdings" && (
+          <motion.div key="holdings" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            {/* Desktop table */}
+            <Card className="hidden md:block">
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm border-collapse">
+                    <thead>
+                      <tr className="bg-muted border-b">
+                        <th className="px-4 py-3 cursor-pointer hover:bg-accent text-xs font-bold text-muted-foreground" onClick={() => handleSort("name")}>
+                          銘柄 / 地域 {sortConfig.key === "name" ? (sortConfig.direction === "asc" ? "↑" : "↓") : ""}
+                        </th>
+                        <th className="px-4 py-3 text-right cursor-pointer hover:bg-accent text-xs font-bold" onClick={() => handleSort("weight")}>
+                          比率 {sortConfig.key === "weight" ? (sortConfig.direction === "asc" ? "↑" : "↓") : ""}
+                        </th>
+                        <th className="px-4 py-3 text-right cursor-pointer hover:bg-accent text-xs font-bold text-muted-foreground" onClick={() => handleSort("cost")}>
+                          取得額 {sortConfig.key === "cost" ? (sortConfig.direction === "asc" ? "↑" : "↓") : ""}
+                        </th>
+                        <th className="px-4 py-3 text-right cursor-pointer hover:bg-accent text-xs font-bold text-muted-foreground" onClick={() => handleSort("marketValue")}>
+                          評価額 {sortConfig.key === "marketValue" ? (sortConfig.direction === "asc" ? "↑" : "↓") : ""}
+                        </th>
+                        <th className="px-4 py-3 text-right cursor-pointer hover:bg-accent text-xs font-bold text-muted-foreground" onClick={() => handleSort("profit")}>
+                          損益 {sortConfig.key === "profit" ? (sortConfig.direction === "asc" ? "↑" : "↓") : ""}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {sortedData.map((item, idx) => (
+                        <motion.tr
+                          key={idx}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: idx * 0.02 }}
+                          className="hover:bg-muted/50 transition-colors"
+                        >
+                          <td className="px-4 py-3">
+                            <div className="flex flex-col gap-1">
+                              <span className="text-sm font-medium max-w-[300px] truncate">{item.name}</span>
+                              <div className="flex gap-1 flex-wrap">
+                                <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                                  item.region === "全世界" ? "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400" :
+                                  item.region === "米国" ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" :
+                                  item.region === "日本" ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" :
+                                  "bg-muted text-muted-foreground"
+                                }`}>{item.region}</span>
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-900 text-white dark:bg-slate-700">{item.nisaTypeDisplay}</span>
+                                <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                                  item.assetType === "ETF" ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" :
+                                  item.assetType === "債券" ? "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400" :
+                                  item.assetType === "株式" ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" :
+                                  "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
+                                }`}>{item.assetType}</span>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <span className="inline-block px-3 py-1 bg-slate-900 text-white text-sm font-black font-mono rounded-lg dark:bg-slate-700">
+                              {item.weight.toFixed(1)}%
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-right font-mono text-xs text-muted-foreground">{formatYen(item.cost)}</td>
+                          <td className="px-4 py-3 text-right font-mono text-sm font-bold">{formatYen(item.marketValue)}</td>
+                          <td className="px-4 py-3 text-right">
+                            <div className={`text-sm font-mono font-bold ${item.profit >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                              {item.profit >= 0 ? "+" : ""}{formatYen(item.profit)}
+                            </div>
+                            <div className="text-[10px] font-mono text-muted-foreground">({item.profitRate.toFixed(2)}%)</div>
+                          </td>
+                        </motion.tr>
+                      ))}
+                      {aggregatedStats.cash > 0 && (
+                        <tr className="bg-muted/30">
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-2">
+                              <Banknote className="w-4 h-4 text-muted-foreground" />
+                              <span className="text-sm font-bold text-muted-foreground">待機資金</span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <span className="inline-block px-3 py-1 bg-muted text-muted-foreground text-sm font-mono rounded-lg">
+                              {((aggregatedStats.cash / (aggregatedStats.equity || 1)) * 100).toFixed(1)}%
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-right text-xs text-muted-foreground">-</td>
+                          <td className="px-4 py-3 text-right font-mono font-bold text-muted-foreground">{formatYen(aggregatedStats.cash)}</td>
+                          <td className="px-4 py-3 text-right text-xs text-muted-foreground">-</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                {sortedData.length === 0 && (
+                  <div className="p-12 text-center text-muted-foreground">
+                    <List className="w-12 h-12 mx-auto mb-4 opacity-30" />
+                    <p className="text-sm font-bold">CSVを取り込むと銘柄リストが表示されます</p>
                   </div>
-                </div>
+                )}
               </CardContent>
             </Card>
-            <Card>
-              <CardContent className="p-6">
-                <h4 className="font-bold text-sm mb-6 flex items-center gap-2">
-                  <Layers className="w-4 h-4 text-emerald-500" /> 資産種別配分
-                </h4>
-                <div className="h-[350px] w-full relative">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie data={assetTypeMix} dataKey="value" nameKey="name" cx="50%" cy="50%"
-                        innerRadius={70} outerRadius={100} paddingAngle={5}
-                        label={CustomPieLabel} labelLine={false}>
-                        {assetTypeMix.map((entry, index) => (
-                          <Cell key={index} fill={ASSET_TYPE_COLORS[entry.name] || ASSET_TYPE_COLORS["その他"]} strokeWidth={0} />
-                        ))}
-                      </Pie>
-                      <Tooltip content={<CustomTooltipContent />} />
-                      <Legend verticalAlign="bottom" formatter={(v: string) => <span className="text-xs font-bold">{v}</span>} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
 
-          {/* Top 10 */}
-          {top10Data.length > 0 && (
-            <Card>
-              <CardContent className="p-6">
-                <h4 className="font-bold text-sm mb-6 flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4" /> Top 10 保有銘柄
-                </h4>
-                <div className="h-[500px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={top10Data} layout="vertical" margin={{ left: 10, right: 150, top: 20, bottom: 20 }}>
-                      <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
-                      <XAxis type="number" hide />
-                      <YAxis dataKey="name" type="category" width={1} hide />
-                      <Bar dataKey="marketValue" radius={[0, 8, 8, 0]} barSize={28}>
-                        <LabelList dataKey="name" position="top" offset={10}
-                          style={{ fontSize: "12px", fontWeight: "700", fill: "#1e293b" }} />
-                        <LabelList dataKey="displayValue" position="right" offset={10}
-                          style={{ fontSize: "13px", fontWeight: "900", fill: "#334155", fontFamily: "monospace" }} />
-                        {top10Data.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={REGION_COLORS[entry.region] || REGION_COLORS["その他の地域"]} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      )}
-
-      {activeTab === "dashboard" && aggregatedStats.equity === 0 && (
-        <Card>
-          <CardContent className="p-12 text-center text-muted-foreground">
-            <PieChartIcon className="w-12 h-12 mx-auto mb-4 opacity-30" />
-            <p className="text-sm font-bold">CSVファイルを取り込むとポートフォリオ分析が表示されます</p>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Holdings Tab */}
-      {activeTab === "holdings" && (
-        <Card>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm border-collapse">
-                <thead>
-                  <tr className="bg-muted border-b">
-                    <th className="px-4 py-3 cursor-pointer hover:bg-accent text-xs font-bold text-muted-foreground" onClick={() => handleSort("name")}>銘柄 / 地域</th>
-                    <th className="px-4 py-3 text-right cursor-pointer hover:bg-accent text-xs font-bold" onClick={() => handleSort("weight")}>比率</th>
-                    <th className="px-4 py-3 text-right cursor-pointer hover:bg-accent text-xs font-bold text-muted-foreground" onClick={() => handleSort("cost")}>取得額</th>
-                    <th className="px-4 py-3 text-right cursor-pointer hover:bg-accent text-xs font-bold text-muted-foreground" onClick={() => handleSort("marketValue")}>評価額</th>
-                    <th className="px-4 py-3 text-right cursor-pointer hover:bg-accent text-xs font-bold text-muted-foreground" onClick={() => handleSort("profit")}>損益</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
+            {/* Mobile card view */}
+            <div className="md:hidden space-y-3">
+              {sortedData.length === 0 ? (
+                <Card>
+                  <CardContent className="p-12 text-center text-muted-foreground">
+                    <List className="w-12 h-12 mx-auto mb-4 opacity-30" />
+                    <p className="text-sm font-bold">CSVを取り込むと銘柄リストが表示されます</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <>
                   {sortedData.map((item, idx) => (
-                    <tr key={idx} className="hover:bg-muted/50 transition-colors">
-                      <td className="px-4 py-3">
-                        <div className="flex flex-col gap-1">
-                          <span className="text-sm font-medium max-w-[300px] truncate">{item.name}</span>
-                          <div className="flex gap-1 flex-wrap">
-                            <span className={`text-[10px] px-1.5 py-0.5 rounded border ${
-                              item.region === "全世界" ? "bg-purple-50 text-purple-600 border-purple-100" :
-                              item.region === "米国" ? "bg-rose-50 text-rose-600 border-rose-100" :
-                              item.region === "日本" ? "bg-blue-50 text-blue-600 border-blue-100" :
-                              "bg-muted text-muted-foreground"
-                            }`}>
-                              {item.region}
-                            </span>
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-900 text-white">{item.nisaTypeDisplay}</span>
-                            <span className={`text-[10px] px-1.5 py-0.5 rounded border ${
-                              item.assetType === "ETF" ? "bg-amber-50 text-amber-600 border-amber-100" :
-                              item.assetType === "債券" ? "bg-violet-50 text-violet-600 border-violet-100" :
-                              item.assetType === "株式" ? "bg-blue-50 text-blue-600 border-blue-100" :
-                              "bg-indigo-50 text-indigo-600 border-indigo-100"
-                            }`}>
-                              {item.assetType}
-                            </span>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <span className="inline-block px-3 py-1 bg-slate-900 text-white text-sm font-black font-mono rounded-lg">
-                          {item.weight.toFixed(1)}%
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-right font-mono text-xs text-muted-foreground">{formatYen(item.cost)}</td>
-                      <td className="px-4 py-3 text-right font-mono text-sm font-bold">{formatYen(item.marketValue)}</td>
-                      <td className="px-4 py-3 text-right">
-                        <div className={`text-sm font-mono font-bold ${item.profit >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
-                          {item.profit >= 0 ? "+" : ""}{formatYen(item.profit)}
-                        </div>
-                        <div className="text-[10px] font-mono text-muted-foreground">({item.profitRate.toFixed(2)}%)</div>
-                      </td>
-                    </tr>
+                    <HoldingCard key={idx} item={item} index={idx} />
                   ))}
                   {aggregatedStats.cash > 0 && (
-                    <tr className="bg-muted/30">
-                      <td className="px-4 py-3">
+                    <Card className="bg-muted/30">
+                      <CardContent className="p-4 flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <Banknote className="w-4 h-4 text-muted-foreground" />
                           <span className="text-sm font-bold text-muted-foreground">待機資金</span>
                         </div>
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <span className="inline-block px-3 py-1 bg-muted text-muted-foreground text-sm font-mono rounded-lg">
-                          {((aggregatedStats.cash / (aggregatedStats.equity || 1)) * 100).toFixed(1)}%
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-right text-xs text-muted-foreground">-</td>
-                      <td className="px-4 py-3 text-right font-mono font-bold text-muted-foreground">{formatYen(aggregatedStats.cash)}</td>
-                      <td className="px-4 py-3 text-right text-xs text-muted-foreground">-</td>
-                    </tr>
+                        <span className="font-mono font-bold text-muted-foreground">{formatYen(aggregatedStats.cash)}</span>
+                      </CardContent>
+                    </Card>
                   )}
-                </tbody>
-              </table>
+                </>
+              )}
             </div>
-            {sortedData.length === 0 && (
-              <div className="p-12 text-center text-muted-foreground">
-                <List className="w-12 h-12 mx-auto mb-4 opacity-30" />
-                <p className="text-sm font-bold">CSVを取り込むと銘柄リストが表示されます</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
+          </motion.div>
+        )}
 
-      {/* History Tab */}
-      {activeTab === "history" && (
-        <div className="space-y-6">
-          <Card>
-            <CardContent className="p-6">
-              <h4 className="font-bold text-sm mb-6 flex items-center gap-2">
-                <Activity className="w-4 h-4 text-emerald-500" /> 資産推移
-              </h4>
-              <div className="h-[350px] w-full">
-                {history.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={history}>
-                      <defs>
-                        <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                          <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                      <XAxis dataKey="date" axisLine={false} tickLine={false}
-                        tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: "bold" }} />
-                      <YAxis axisLine={false} tickLine={false}
-                        tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: "bold" }}
-                        tickFormatter={(v: number) => `¥${(v / 10000).toFixed(0)}万`} />
-                      <Tooltip />
-                      <Area type="monotone" dataKey="totalAsset" name="総資産" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorTotal)" />
-                      <Line type="monotone" dataKey="nisaValue" name="NISA" stroke="#3b82f6" strokeWidth={2} strokeDasharray="5 5" dot={false} />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
-                    スナップショットを保存すると推移グラフが表示されます
+        {/* History Tab */}
+        {activeTab === "history" && (
+          <motion.div key="history" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
+            <Card>
+              <CardContent className="p-6">
+                <h4 className="font-bold text-sm mb-6 flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-emerald-500" /> 資産推移
+                </h4>
+                <div className="h-[350px] w-full">
+                  {historyChartData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={historyChartData}>
+                        <defs>
+                          <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#059669" stopOpacity={0.3} />
+                            <stop offset="95%" stopColor="#059669" stopOpacity={0} />
+                          </linearGradient>
+                          <linearGradient id="colorPurchase" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#6366f1" stopOpacity={0.15} />
+                            <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                        <XAxis dataKey="displayDate" axisLine={false} tickLine={false}
+                          tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: "bold" }} />
+                        <YAxis axisLine={false} tickLine={false}
+                          tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: "bold" }}
+                          tickFormatter={(v: number) => `¥${(v / 10000).toFixed(0)}万`} />
+                        <Tooltip content={<HistoryTooltip />} />
+                        <Area type="monotone" dataKey="purchaseAmount" name="投資元本" stroke="#6366f1" strokeWidth={2}
+                          strokeDasharray="5 5" fillOpacity={1} fill="url(#colorPurchase)"
+                          animationDuration={800} />
+                        <Area type="monotone" dataKey="totalAsset" name="総資産" stroke="#059669" strokeWidth={3}
+                          fillOpacity={1} fill="url(#colorTotal)"
+                          animationDuration={800} />
+                        <Line type="monotone" dataKey="nisaValue" name="NISA" stroke="#2563eb" strokeWidth={2}
+                          strokeDasharray="5 5" dot={false}
+                          animationDuration={800} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
+                      スナップショットを保存すると推移グラフが表示されます
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* History table — desktop */}
+            <Card className="hidden md:block">
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm border-collapse">
+                    <thead className="bg-muted border-b">
+                      <tr>
+                        <th className="px-4 py-3 text-xs font-bold text-muted-foreground">日付</th>
+                        <th className="px-4 py-3 text-right text-xs font-bold text-muted-foreground">総資産</th>
+                        <th className="px-4 py-3 text-right text-xs font-bold text-muted-foreground">投資元本</th>
+                        <th className="px-4 py-3 text-right text-xs font-bold text-muted-foreground">損益</th>
+                        <th className="px-4 py-3 text-center text-xs font-bold text-muted-foreground">操作</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {[...history].reverse().map((h) => (
+                        <tr key={h.id} className="hover:bg-muted/50 transition-colors">
+                          <td className="px-4 py-3 font-mono text-muted-foreground">{h.date}</td>
+                          <td className="px-4 py-3 text-right font-mono font-bold">{formatYen(h.totalAsset)}</td>
+                          <td className="px-4 py-3 text-right font-mono text-muted-foreground">{formatYen(h.purchaseAmount || 0)}</td>
+                          <td className="px-4 py-3 text-right">
+                            <span className={`font-mono font-bold ${h.totalProfit >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                              {h.totalProfit >= 0 ? "+" : ""}{formatYen(h.totalProfit)}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <button onClick={() => deleteSnapshot(h.date)} className="p-1 text-muted-foreground hover:text-destructive transition-colors">
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {history.length === 0 && (
+                  <div className="p-12 text-center text-muted-foreground">
+                    <Coins className="w-12 h-12 mx-auto mb-4 opacity-30" />
+                    <p className="text-sm font-bold">まだスナップショットがありません</p>
+                    <p className="text-xs mt-1">CSVを取り込んだ後「保存」ボタンで記録できます</p>
                   </div>
                 )}
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm border-collapse">
-                  <thead className="bg-muted border-b">
-                    <tr>
-                      <th className="px-4 py-3 text-xs font-bold text-muted-foreground">日付</th>
-                      <th className="px-4 py-3 text-right text-xs font-bold text-muted-foreground">総資産</th>
-                      <th className="px-4 py-3 text-right text-xs font-bold text-muted-foreground">投資元本</th>
-                      <th className="px-4 py-3 text-right text-xs font-bold text-muted-foreground">損益</th>
-                      <th className="px-4 py-3 text-center text-xs font-bold text-muted-foreground">操作</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y">
-                    {[...history].reverse().map((h) => (
-                      <tr key={h.id} className="hover:bg-muted/50 transition-colors">
-                        <td className="px-4 py-3 font-mono text-muted-foreground">{h.date}</td>
-                        <td className="px-4 py-3 text-right font-mono font-bold">{formatYen(h.totalAsset)}</td>
-                        <td className="px-4 py-3 text-right font-mono text-muted-foreground">{formatYen(h.purchaseAmount || 0)}</td>
-                        <td className="px-4 py-3 text-right">
-                          <span className={`font-mono font-bold ${h.totalProfit >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
-                            {h.totalProfit >= 0 ? "+" : ""}{formatYen(h.totalProfit)}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-center">
+            {/* History — mobile card view */}
+            <div className="md:hidden space-y-3">
+              {history.length === 0 ? (
+                <Card>
+                  <CardContent className="p-12 text-center text-muted-foreground">
+                    <Coins className="w-12 h-12 mx-auto mb-4 opacity-30" />
+                    <p className="text-sm font-bold">まだスナップショットがありません</p>
+                    <p className="text-xs mt-1">CSVを取り込んだ後「保存」ボタンで記録できます</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                [...history].reverse().map((h) => (
+                  <motion.div key={h.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-mono text-sm text-muted-foreground">{h.date}</span>
                           <button onClick={() => deleteSnapshot(h.date)} className="p-1 text-muted-foreground hover:text-destructive transition-colors">
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              {history.length === 0 && (
-                <div className="p-12 text-center text-muted-foreground">
-                  <Coins className="w-12 h-12 mx-auto mb-4 opacity-30" />
-                  <p className="text-sm font-bold">まだスナップショットがありません</p>
-                  <p className="text-xs mt-1">CSVを取り込んだ後「保存」ボタンで記録できます</p>
-                </div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 text-xs">
+                          <div>
+                            <p className="text-muted-foreground text-[10px] mb-0.5">総資産</p>
+                            <p className="font-mono font-bold">{formatYen(h.totalAsset)}</p>
+                          </div>
+                          <div>
+                            <p className="text-muted-foreground text-[10px] mb-0.5">投資元本</p>
+                            <p className="font-mono">{formatYen(h.purchaseAmount || 0)}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-muted-foreground text-[10px] mb-0.5">損益</p>
+                            <p className={`font-mono font-bold ${h.totalProfit >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                              {h.totalProfit >= 0 ? "+" : ""}{formatYen(h.totalProfit)}
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))
               )}
-            </CardContent>
-          </Card>
-        </div>
-      )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
