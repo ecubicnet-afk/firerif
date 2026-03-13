@@ -3,7 +3,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { CalendarRange, Loader2, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { PlanWizard } from "@/components/life-plan/PlanWizard";
+import dynamic from "next/dynamic";
+
+const PlanWizard = dynamic(() => import("@/components/life-plan/PlanWizard").then(m => ({ default: m.PlanWizard })), {
+  loading: () => <div className="animate-pulse bg-muted rounded-lg h-96" />,
+});
 import { DEFAULT_LIFE_PLAN } from "@/lib/life-plan-constants";
 import type { LifePlanInput } from "@/types/life-plan";
 

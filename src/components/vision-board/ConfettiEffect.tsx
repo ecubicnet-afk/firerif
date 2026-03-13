@@ -17,7 +17,7 @@ export function ConfettiEffect({ trigger }: { trigger: boolean }) {
   useEffect(() => {
     if (!trigger) return;
     const colors = ["#f59e0b", "#3b82f6", "#10b981", "#ec4899", "#8b5cf6", "#ef4444"];
-    const newParticles: Particle[] = Array.from({ length: 50 }, (_, i) => ({
+    const newParticles: Particle[] = Array.from({ length: 25 }, (_, i) => ({
       id: i,
       x: Math.random() * 100,
       color: colors[Math.floor(Math.random() * colors.length)],
@@ -44,21 +44,12 @@ export function ConfettiEffect({ trigger }: { trigger: boolean }) {
             width: p.size,
             height: p.size,
             backgroundColor: p.color,
-            borderRadius: Math.random() > 0.5 ? "50%" : "2px",
+            borderRadius: p.id % 2 === 0 ? "50%" : "2px",
             animationDelay: `${p.delay}s`,
             animationDuration: `${p.duration}s`,
           }}
         />
       ))}
-      <style>{`
-        @keyframes confetti-fall {
-          0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-          100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
-        }
-        .animate-confetti {
-          animation: confetti-fall linear forwards;
-        }
-      `}</style>
     </div>
   );
 }

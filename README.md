@@ -18,22 +18,131 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Noto Sans JP](https://fonts.google.com/noto/specimen/Noto+Sans+JP), a Japanese font optimized for web.
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## プロジェクト構成
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+src/
+├── app/                          # Next.js App Router
+│   ├── (auth)/                   # 認証ページ（login, register）
+│   ├── (admin)/                  # 管理者ページ
+│   ├── (member)/                 # 会員専用ページ（認証必須）
+│   │   ├── dashboard/            # ダッシュボード
+│   │   ├── budget/               # 家計簿
+│   │   ├── assets/               # 資産管理
+│   │   ├── dream/                # 節約ドリーム
+│   │   ├── vision/               # ビジョンボード
+│   │   ├── life-plan/            # ライフプラン
+│   │   ├── courses/              # 動画コース
+│   │   ├── live/                 # ライブ配信
+│   │   ├── qa/                   # Q&A
+│   │   ├── todos/                # ToDoリスト
+│   │   └── community/            # コミュニティ
+│   └── api/                      # API Routes
+├── components/                   # 再利用可能なコンポーネント
+│   ├── ui/                       # 基本UIプリミティブ（Radix UI + Tailwind）
+│   ├── layout/                   # レイアウト（Header, Sidebar, Footer）
+│   ├── auth/                     # 認証フォーム
+│   ├── budget/                   # 家計簿関連
+│   ├── dream/                    # 節約ドリーム関連
+│   ├── vision-board/             # ビジョンボード関連
+│   ├── life-plan/                # ライフプラン関連
+│   └── video/                    # 動画プレーヤー
+├── hooks/                        # カスタムReact Hooks
+├── lib/                          # ユーティリティ・ヘルパー
+└── types/                        # TypeScript型定義
+prisma/                           # Prismaスキーマ・マイグレーション
+public/                           # 静的アセット
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## パフォーマンス最適化戦略
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Core Web Vitals 改善施策
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+#### LCP（Largest Contentful Paint）
+- **フォント最適化**: `next/font/google` による Noto Sans JP のセルフホスティング・自動最適化（レンダリングブロック解消）
+- **YouTube遅延読み込み**: サムネイル表示 → クリックで iframe 挿入（lite-youtube パターン）
+- **画像最適化**: `next/image` + WebP/AVIF 自動変換
+
+#### INP（Interaction to Next Paint）
+- **コード分割**: `next/dynamic` による重いコンポーネントの遅延読み込み
+  - `PlanWizard` — ライフプランウィザード
+  - `VisionForm` — ビジョンボードフォーム
+  - `ConfettiEffect` — 紙吹雪エフェクト（SSR無効）
+- **パッケージ最適化**: `optimizePackageImports` で `lucide-react`, `recharts`, `framer-motion` のツリーシェイキング強化
+
+#### CLS（Cumulative Layout Shift）
+- **フォント表示戦略**: `display: 'swap'` でFOITを防止
+- **アニメーション最適化**: `will-change: transform` による GPU アクセラレーション
+- **パーティクル削減**: ConfettiEffect のパーティクル数を50→25に削減
+
+### バンドルサイズ最小化
+
+| 施策 | 対象 | 効果 |
+|------|------|------|
+| `optimizePackageImports` | lucide-react, recharts, framer-motion | 未使用エクスポートの除去 |
+| `next/dynamic` | 重いコンポーネント | 初期バンドルからの分離 |
+| `next/font` | Google Fonts | 外部リクエスト削減 |
+| `compress: true` | 全アセット | gzip圧縮の有効化 |
+| YouTube サムネイル | iframe の遅延読み込み | 初期ロード時のサードパーティスクリプト削減 |
+
+---
+
+## SEO・アクセシビリティ方針
+
+### メタデータ管理
+- ルートレイアウトに `title.template` を設定（`%s | ファイヤーライフ`）
+- 各ページの `layout.tsx` に固有の `title` と `description` を設定
+- Open Graph / Twitter Card は今後のフェーズで対応予定
+
+### アクセシビリティ
+- 動画プレーヤーに `aria-label` 属性（「動画を再生」）
+- キーボード操作対応（`tabIndex`, `onKeyDown`）
+- 紙吹雪エフェクトの `pointer-events-none` による操作妨害防止
+
+---
+
+## セキュリティ対策
+
+### 実装済みの OWASP Top 10 対応
+
+| 脅威 | 対策 |
+|------|------|
+| クリックジャッキング | `X-Frame-Options: DENY` |
+| MIMEスニッフィング | `X-Content-Type-Options: nosniff` |
+| 情報漏洩 | `Referrer-Policy: strict-origin-when-cross-origin` |
+| 通信の暗号化 | `Strict-Transport-Security` (HSTS preload) |
+| 権限管理 | `Permissions-Policy` (camera, microphone, geolocation 無効) |
+| 認証 | NextAuth v4 によるセッション管理 |
+| パスワード | bcryptjs によるハッシュ化 |
+| 決済 | Stripe Checkout（PCI DSS 準拠） |
+| データベース | Prisma ORM によるパラメータ化クエリ（SQLインジェクション防止） |
+
+---
+
+## 依存パッケージ管理方針
+
+### コアパッケージ（変更不可）
+- `next`, `react`, `react-dom` — フレームワーク基盤
+- `@prisma/client` — データベースアクセス
+- `next-auth` — 認証
+- `stripe` — 決済
+
+### UI パッケージ（最小限維持）
+- `@radix-ui/*` — ヘッドレスUIプリミティブ（アクセシブル）
+- `tailwindcss` — ユーティリティCSS
+- `lucide-react` — アイコン（`optimizePackageImports` で最適化済み）
+- `framer-motion` — アニメーション（必要箇所のみ `dynamic` で遅延読み込み）
+
+### 不要パッケージの検出
+```bash
+npx depcheck
+```
 
 ---
 

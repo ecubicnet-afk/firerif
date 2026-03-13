@@ -4,10 +4,16 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import dynamic from "next/dynamic";
 import { VisionCard } from "@/components/vision-board/VisionCard";
-import { VisionForm } from "@/components/vision-board/VisionForm";
 import { EmptyState } from "@/components/vision-board/EmptyState";
-import { ConfettiEffect } from "@/components/vision-board/ConfettiEffect";
+
+const VisionForm = dynamic(() => import("@/components/vision-board/VisionForm").then(m => ({ default: m.VisionForm })), {
+  loading: () => <div className="animate-pulse bg-muted rounded-lg h-96" />,
+});
+const ConfettiEffect = dynamic(() => import("@/components/vision-board/ConfettiEffect").then(m => ({ default: m.ConfettiEffect })), {
+  ssr: false,
+});
 
 interface VisionItem {
   id: string;
