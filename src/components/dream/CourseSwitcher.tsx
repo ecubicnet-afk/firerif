@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { COURSES } from "@/lib/dream-constants";
+import { multiplierForYears } from "@/lib/dream-calc";
 import type { CourseId } from "@/types/dream";
 
 interface CourseSwitcherProps {
@@ -14,6 +15,7 @@ export function CourseSwitcher({ courseId, onCourseChange }: CourseSwitcherProps
     <div className="flex gap-1 p-1 bg-muted rounded-lg">
       {COURSES.map((course) => {
         const isActive = course.id === courseId;
+        const mult = multiplierForYears(course.annualRate, 20);
         return (
           <button
             key={course.id}
@@ -30,7 +32,7 @@ export function CourseSwitcher({ courseId, onCourseChange }: CourseSwitcherProps
               {course.label}
             </span>
             <span className="text-[10px] text-muted-foreground">
-              x{course.multiplier.toFixed(1)}
+              x{mult.toFixed(1)}
             </span>
           </button>
         );
