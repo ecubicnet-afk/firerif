@@ -14,7 +14,15 @@ export async function POST() {
     );
   }
 
-  const hashedPassword = await bcrypt.hash("admin12345", 12);
+  const initialPassword = process.env.ADMIN_INITIAL_PASSWORD;
+  if (!initialPassword || initialPassword.length < 8) {
+    return NextResponse.json(
+      { error: "ADMIN_INITIAL_PASSWORD environment variable must be set (min 8 chars)" },
+      { status: 500 }
+    );
+  }
+
+  const hashedPassword = await bcrypt.hash(initialPassword, 12);
 
   const user = await prisma.user.upsert({
     where: { email: "admin@firelife.jp" },

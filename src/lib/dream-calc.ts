@@ -7,9 +7,18 @@ export function futureValue(amount: number, courseId: CourseId): number {
   return Math.round(amount * COURSES_MAP[courseId].multiplier);
 }
 
+export function futureValue50(amount: number, courseId: CourseId): number {
+  return Math.round(amount * COURSES_MAP[courseId].multiplier50);
+}
+
 export function totalFutureValue(entries: SavingsEntry[], courseId: CourseId): number {
   const total = entries.reduce((sum, e) => sum + e.amount, 0);
   return Math.round(total * COURSES_MAP[courseId].multiplier);
+}
+
+export function totalFutureValue50(entries: SavingsEntry[], courseId: CourseId): number {
+  const total = entries.reduce((sum, e) => sum + e.amount, 0);
+  return Math.round(total * COURSES_MAP[courseId].multiplier50);
 }
 
 export function totalSavings(entries: SavingsEntry[]): number {

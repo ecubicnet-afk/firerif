@@ -2,7 +2,7 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { formatYen } from "@/lib/utils";
-import { totalFutureValue, totalSavings } from "@/lib/dream-calc";
+import { totalFutureValue, totalFutureValue50, totalSavings } from "@/lib/dream-calc";
 import { COURSES_MAP } from "@/lib/dream-constants";
 import type { SavingsEntry, CourseId } from "@/types/dream";
 import { TrendingUp, Wallet } from "lucide-react";
@@ -16,13 +16,14 @@ interface MonthlySummaryProps {
 export function MonthlySummary({ entries, courseId, label }: MonthlySummaryProps) {
   const actual = totalSavings(entries);
   const future = totalFutureValue(entries, courseId);
+  const future50 = totalFutureValue50(entries, courseId);
   const course = COURSES_MAP[courseId];
 
   return (
     <Card>
       <CardContent className="p-4">
         <p className="text-sm font-medium text-muted-foreground mb-3">{label}</p>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Wallet className="h-3.5 w-3.5" />
@@ -39,9 +40,18 @@ export function MonthlySummary({ entries, courseId, label }: MonthlySummaryProps
               {formatYen(future)}
             </p>
           </div>
+          <div className="space-y-1">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <TrendingUp className="h-3.5 w-3.5" />
+              <span>✨ 50年後の価値</span>
+            </div>
+            <p className="text-xl font-bold bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">
+              {formatYen(future50)}
+            </p>
+          </div>
         </div>
         <p className="text-[10px] text-muted-foreground mt-2">
-          ※{course.indexName}（年利{(course.annualRate * 100).toFixed(0)}%）で{course.multiplier.toFixed(1)}倍換算
+          ※{course.indexName}（年利{(course.annualRate * 100).toFixed(0)}%）で20年後{course.multiplier.toFixed(1)}倍・50年後{course.multiplier50.toFixed(1)}倍換算
         </p>
       </CardContent>
     </Card>

@@ -133,7 +133,8 @@ export function Ledger({
             <span className="text-lg invisible">📦</span>
             <span className="flex-1">内容</span>
             <span>節約額</span>
-            <span className="min-w-[90px] text-right">🚀 20年後の価値</span>
+            <span className="min-w-[80px] text-right">🚀 20年後</span>
+            <span className="min-w-[80px] text-right">✨ 50年後</span>
           </div>
         </CardHeader>
         <CardContent className="pt-0">
