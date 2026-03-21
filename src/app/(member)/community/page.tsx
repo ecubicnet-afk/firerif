@@ -39,7 +39,7 @@ export default function CommunityPage() {
             <Sparkles className="h-5 w-5 text-yellow-600 dark:text-yellow-400 shrink-0" />
             <p className="text-sm text-yellow-800 dark:text-yellow-200">
               <span className="font-bold">ベータテスト期間中</span> —
-              現在コミュニティは無料で開放されています。正式リリース後は有料会員限定となります。
+              現在すべての機能を無料で開放しています。正式リリース後は有料会員限定となります。
             </p>
           </CardContent>
         </Card>

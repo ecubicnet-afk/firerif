@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -36,17 +35,7 @@ const navItems = [
   { href: "/community", label: "コミュニティ", icon: Users },
 ];
 
-const isBetaFree = process.env.NEXT_PUBLIC_COMMUNITY_BETA_FREE === "true";
-
 function useVisibleNavItems() {
-  const { data: session } = useSession();
-  const hasSubscription =
-    session?.user?.subscriptionStatus === "ACTIVE" ||
-    session?.user?.subscriptionStatus === "TRIALING";
-
-  if (isBetaFree && !hasSubscription) {
-    return navItems.filter((item) => item.href === "/community");
-  }
   return navItems;
 }
 

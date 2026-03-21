@@ -26,12 +26,10 @@ const memberPaths = [
   "/journal",
 ];
 
-// Community is free during beta (requires login only, no subscription)
-const COMMUNITY_BETA_FREE = process.env.COMMUNITY_BETA_FREE === "true";
+// Beta free: all features require login only, no subscription check
+const BETA_FREE = process.env.COMMUNITY_BETA_FREE === "true";
 const communityPaths = ["/community"];
-const authOnlyPaths = COMMUNITY_BETA_FREE ? communityPaths : [];
-// When beta is off, community requires subscription like other member paths
-if (!COMMUNITY_BETA_FREE) {
+if (!BETA_FREE) {
   memberPaths.push(...communityPaths);
 }
 
@@ -65,8 +63,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Auth-only paths (e.g. community during beta) → login required, no subscription check
-  if (authOnlyPaths.some((p) => pathname === p || pathname.startsWith(p + "/"))) {
+  // Beta free: skip subscription check for all member paths
+  if (BETA_FREE) {
     return NextResponse.next();
   }
 
@@ -76,11 +74,9 @@ export async function middleware(request: NextRequest) {
       token.subscriptionStatus !== "ACTIVE" &&
       token.subscriptionStatus !== "TRIALING"
     ) {
-      // Beta free: redirect to community instead of resubscribe page
-      const redirectUrl = COMMUNITY_BETA_FREE
-        ? "/community"
-        : "/register?resubscribe=true";
-      return NextResponse.redirect(new URL(redirectUrl, request.url));
+      return NextResponse.redirect(
+        new URL("/register?resubscribe=true", request.url)
+      );
     }
   }
 
