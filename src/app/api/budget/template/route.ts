@@ -41,7 +41,16 @@ export async function POST(request: Request) {
 
   let template;
   if (id) {
-    // Update existing template
+    // Verify ownership before updating
+    const existing = await prisma.budgetTemplate.findFirst({
+      where: { id, userId: session.user.id },
+    });
+    if (!existing) {
+      return NextResponse.json(
+        { error: "データが見つかりません" },
+        { status: 404 }
+      );
+    }
     template = await prisma.budgetTemplate.update({
       where: { id },
       data,
