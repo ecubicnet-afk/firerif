@@ -53,7 +53,7 @@ export default function DashboardPage() {
           ようこそ、{session?.user?.name || "メンバー"}さん
         </h1>
         <p className="text-muted-foreground mt-1">
-          ファイヤーライフコミュニティへようこそ。FIREへの道を一緒に歩みましょう。
+          ファイアライフコミュニティへようこそ。FIREへの道を一緒に歩みましょう。
         </p>
       </div>
 
@@ -77,7 +77,7 @@ export default function DashboardPage() {
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            ファイヤーライフコミュニティへようこそ！動画コースやライブ配信をお楽しみください。
+            ファイアライフコミュニティへようこそ！動画コースやライブ配信をお楽しみください。
             質問があればQ&Aページから投稿できます。
           </p>
         </CardContent>

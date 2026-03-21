@@ -4,8 +4,8 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "ファイヤーライフ コミュニティ",
-    template: "%s | ファイヤーライフ",
+    default: "ファイアライフ コミュニティ",
+    template: "%s | ファイアライフ",
   },
   description:
     "経済的自立と早期リタイアを目指すコミュニティ。投資・節約・資産管理を学ぼう。",

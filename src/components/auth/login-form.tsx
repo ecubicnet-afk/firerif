@@ -9,10 +9,13 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 
+const isBetaFree = process.env.NEXT_PUBLIC_COMMUNITY_BETA_FREE === "true";
+
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+  const defaultUrl = isBetaFree ? "/community" : "/dashboard";
+  const callbackUrl = searchParams.get("callbackUrl") || defaultUrl;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");

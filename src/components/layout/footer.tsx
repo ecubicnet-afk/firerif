@@ -6,7 +6,7 @@ export function Footer() {
       <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Flame className="h-4 w-4" />
-          <span>&copy; {new Date().getFullYear()} ファイヤーライフ</span>
+          <span>&copy; {new Date().getFullYear()} ファイアライフ</span>
         </div>
         <div className="flex gap-4 text-sm text-muted-foreground">
           <a href="#" className="hover:text-foreground">利用規約</a>
