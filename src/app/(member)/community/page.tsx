@@ -1,6 +1,8 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, MessageCircle, ExternalLink } from "lucide-react";
+import { Users, MessageCircle, ExternalLink, Sparkles } from "lucide-react";
+
+const COMMUNITY_BETA_FREE = process.env.COMMUNITY_BETA_FREE === "true";
 
 const communityLinks = [
   {
@@ -30,6 +32,18 @@ export default function CommunityPage() {
           ファイヤーライフのメンバー同士で交流しましょう
         </p>
       </div>
+
+      {COMMUNITY_BETA_FREE && (
+        <Card className="bg-yellow-50 border-yellow-300 dark:bg-yellow-950 dark:border-yellow-800">
+          <CardContent className="flex items-center gap-3 p-4">
+            <Sparkles className="h-5 w-5 text-yellow-600 dark:text-yellow-400 shrink-0" />
+            <p className="text-sm text-yellow-800 dark:text-yellow-200">
+              <span className="font-bold">ベータテスト期間中</span> —
+              現在コミュニティは無料で開放されています。正式リリース後は有料会員限定となります。
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="bg-primary/5 border-primary/20">
         <CardContent className="flex items-center gap-4 p-6">

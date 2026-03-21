@@ -21,9 +21,17 @@ const memberPaths = [
   "/assets",
   "/vision",
   "/todos",
-  "/community",
   "/dream",
 ];
+
+// Community is free during beta (requires login only, no subscription)
+const COMMUNITY_BETA_FREE = process.env.COMMUNITY_BETA_FREE === "true";
+const communityPaths = ["/community"];
+const authOnlyPaths = COMMUNITY_BETA_FREE ? communityPaths : [];
+// When beta is off, community requires subscription like other member paths
+if (!COMMUNITY_BETA_FREE) {
+  memberPaths.push(...communityPaths);
+}
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -52,6 +60,11 @@ export async function middleware(request: NextRequest) {
     if (token.role !== "ADMIN") {
       return NextResponse.redirect(new URL("/dashboard", request.url));
     }
+    return NextResponse.next();
+  }
+
+  // Auth-only paths (e.g. community during beta) → login required, no subscription check
+  if (authOnlyPaths.some((p) => pathname === p || pathname.startsWith(p + "/"))) {
     return NextResponse.next();
   }
 
