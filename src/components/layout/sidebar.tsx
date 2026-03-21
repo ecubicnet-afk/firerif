@@ -85,12 +85,12 @@ export function MobileNav() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex flex-1 flex-col items-center gap-1 py-2 text-xs min-w-[56px]",
+                "flex flex-1 flex-col items-center gap-1 py-2 text-[10px] min-w-0 overflow-hidden",
                 isActive ? "text-primary" : "text-muted-foreground"
               )}
             >
               <item.icon className="h-5 w-5" />
-              <span className="truncate">{item.label}</span>
+              <span className="truncate max-w-full px-1">{item.label}</span>
             </Link>
           );
         })}
