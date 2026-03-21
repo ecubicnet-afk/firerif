@@ -16,6 +16,14 @@ interface DreamViewProps {
   onSaveDream: (data: { title: string; targetAmount: number; photoData: string }) => Promise<void>;
 }
 
+function clarityMessage(pct: number): { icon: string; text: string } {
+  if (pct === 0) return { icon: "🌫️", text: "節約を始めると、夢の画像が少しずつ鮮明に…" };
+  if (pct < 20) return { icon: "🔍", text: "夢がうっすら見えてきた！この調子で続けよう" };
+  if (pct < 50) return { icon: "✨", text: "だんだん夢がクリアに！節約の力を実感しよう" };
+  if (pct < 80) return { icon: "🌟", text: "もうすぐ夢がハッキリ見える！ゴールは近い" };
+  return { icon: "🔥", text: "あと少しで夢が完全に鮮明に！ラストスパート！" };
+}
+
 export function DreamView({ dream, entries, courseId, onSaveDream }: DreamViewProps) {
   const [editorOpen, setEditorOpen] = useState(false);
 
@@ -118,7 +126,13 @@ export function DreamView({ dream, entries, courseId, onSaveDream }: DreamViewPr
               />
             </div>
             {!isCompleted && (
-              <div className="mt-1.5 space-y-0.5">
+              <div className="mt-1.5 space-y-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm leading-none">{clarityMessage(progressPct).icon}</span>
+                  <span className="text-xs text-muted-foreground italic">
+                    {clarityMessage(progressPct).text}
+                  </span>
+                </div>
                 <p className="text-xs text-muted-foreground">
                   {dream.title}まであと {formatYen(remaining)}（10年後換算）
                 </p>
