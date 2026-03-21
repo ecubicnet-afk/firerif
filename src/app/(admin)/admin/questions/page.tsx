@@ -6,6 +6,18 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { RefreshCw, Send } from "lucide-react";
 
+const STATUS_LABELS: Record<string, string> = {
+  PENDING: "未回答",
+  SYNCED: "同期済み",
+  ANSWERED: "回答済み",
+};
+
+const statusVariants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+  PENDING: "destructive",
+  SYNCED: "secondary",
+  ANSWERED: "default",
+};
+
 interface QuestionWithUser {
   id: string;
   content: string;
@@ -69,6 +81,21 @@ export default function AdminQuestionsPage() {
         <div className="rounded-md bg-primary/10 p-3 text-sm">{syncResult}</div>
       )}
 
+      {/* Status summary bar */}
+      {questions.length > 0 && (
+        <div className="flex items-center gap-4 p-3 rounded-lg bg-muted/50">
+          <span className="text-sm font-medium">全{questions.length}件:</span>
+          {(["PENDING", "SYNCED", "ANSWERED"] as const).map((status) => {
+            const count = questions.filter((q) => q.status === status).length;
+            return (
+              <Badge key={status} variant={statusVariants[status]} className="text-xs">
+                {STATUS_LABELS[status]}: {count}件
+              </Badge>
+            );
+          })}
+        </div>
+      )}
+
       <div className="space-y-2">
         {questions.map((q) => (
           <Card key={q.id}>
@@ -80,8 +107,8 @@ export default function AdminQuestionsPage() {
                     {new Date(q.createdAt).toLocaleDateString("ja-JP")}
                   </p>
                 </div>
-                <Badge variant={q.status === "ANSWERED" ? "default" : "outline"}>
-                  {q.status}
+                <Badge variant={statusVariants[q.status] || "outline"}>
+                  {STATUS_LABELS[q.status] || q.status}
                 </Badge>
               </div>
             </CardContent>

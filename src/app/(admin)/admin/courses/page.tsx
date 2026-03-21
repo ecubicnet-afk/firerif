@@ -15,7 +15,7 @@ interface Course {
   title: string;
   description: string | null;
   sortOrder: number;
-  episodes: { id: string; title: string; sortOrder: number }[];
+  episodes: { id: string; title: string; sortOrder: number; duration?: number | null }[];
 }
 
 export default function AdminCoursesPage() {
@@ -98,6 +98,40 @@ export default function AdminCoursesPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
+      {/* Summary stats */}
+      {courses.length > 0 && (
+        <div className="flex items-center gap-4 p-3 rounded-lg bg-muted/50">
+          <span className="text-sm">
+            <span className="font-medium">{courses.length}</span> コース
+          </span>
+          <span className="text-sm">
+            <span className="font-medium">
+              {courses.reduce((sum, c) => sum + c.episodes.length, 0)}
+            </span> エピソード
+          </span>
+          <span className="text-sm">
+            合計{" "}
+            <span className="font-medium">
+              {(() => {
+                const totalMin = courses.reduce(
+                  (sum, c) =>
+                    sum +
+                    c.episodes.reduce(
+                      (eSum, e) => eSum + (e.duration || 0),
+                      0
+                    ),
+                  0
+                );
+                if (totalMin === 0) return "—";
+                const hours = Math.floor(totalMin / 60);
+                const mins = totalMin % 60;
+                return hours > 0 ? `${hours}時間${mins}分` : `${mins}分`;
+              })()}
+            </span>
+          </span>
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">コース管理</h1>
         <Button onClick={() => setShowCourseForm(true)}>
@@ -159,6 +193,9 @@ export default function AdminCoursesPage() {
                 <Video className="h-5 w-5 text-primary" />
                 <CardTitle>{course.title}</CardTitle>
                 <Badge variant="outline">{course.slug}</Badge>
+                <Badge variant="secondary">
+                  {course.episodes.length}話
+                </Badge>
               </div>
               <Button
                 size="sm"

@@ -128,6 +128,30 @@ export default function AdminLivePage() {
         </Card>
       )}
 
+      {/* Summary stats */}
+      {streams.length > 0 && (() => {
+        const now = new Date();
+        const past = streams.filter((s) => new Date(s.scheduledAt) < now && !s.isLive).length;
+        const upcoming = streams.filter((s) => new Date(s.scheduledAt) >= now).length;
+        const live = streams.filter((s) => s.isLive).length;
+        return (
+          <div className="flex items-center gap-4 p-3 rounded-lg bg-muted/50">
+            <span className="text-sm">
+              全 <span className="font-medium">{streams.length}</span> 配信
+            </span>
+            {live > 0 && (
+              <Badge className="bg-red-500">LIVE: {live}</Badge>
+            )}
+            <span className="text-sm">
+              配信予定: <span className="font-medium">{upcoming}</span>
+            </span>
+            <span className="text-sm">
+              配信済み: <span className="font-medium">{past}</span>
+            </span>
+          </div>
+        );
+      })()}
+
       <div className="space-y-2">
         {streams.map((stream) => (
           <Card key={stream.id}>
