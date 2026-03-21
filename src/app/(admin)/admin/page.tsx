@@ -11,6 +11,7 @@ import {
   MessageCircleQuestion,
   AlertTriangle,
   Clock,
+  ClipboardCheck,
 } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { MemberGrowthChart } from "@/components/admin/MemberGrowthChart";
@@ -77,6 +78,8 @@ export default async function AdminPage() {
     recentQuestions,
     pastDueCount,
     oldPendingQuestions,
+    assignmentCount,
+    pendingSubmissionCount,
   ] = await Promise.all([
     // KPI counts
     prisma.user.count(),
@@ -142,6 +145,9 @@ export default async function AdminPage() {
     prisma.question.count({
       where: { status: "PENDING", createdAt: { lte: threeDaysAgo } },
     }),
+    // Assignments
+    prisma.assignment.count(),
+    prisma.assignmentSubmission.count({ where: { status: "SUBMITTED" } }),
   ]);
 
   // Compute subscription breakdown
@@ -266,6 +272,15 @@ export default async function AdminPage() {
       icon: Radio,
       href: "/admin/live",
       delta: null,
+      smallText: true,
+    },
+    {
+      label: "課題管理",
+      value: `${assignmentCount}件`,
+      icon: ClipboardCheck,
+      href: "/admin/assignments",
+      delta: pendingSubmissionCount > 0 ? `未レビュー${pendingSubmissionCount}` : null,
+      warn: pendingSubmissionCount > 0,
       smallText: true,
     },
   ];
