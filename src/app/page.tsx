@@ -79,7 +79,7 @@ export default function LandingPage() {
             <span className="text-primary">一緒に歩もう</span>
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-            ファイヤーライフは、FIRE（経済的自立・早期リタイア）を目指す人のための
+            ファイアライフは、FIRE（経済的自立・早期リタイア）を目指す人のための
             オンラインコミュニティです。投資・節約・資産管理を体系的に学び、
             仲間と共に目標を達成しましょう。
           </p>

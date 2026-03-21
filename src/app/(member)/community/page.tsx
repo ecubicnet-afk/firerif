@@ -29,7 +29,7 @@ export default function CommunityPage() {
       <div>
         <h1 className="text-2xl font-bold">コミュニティ</h1>
         <p className="text-muted-foreground mt-1">
-          ファイヤーライフのメンバー同士で交流しましょう
+          ファイアライフのメンバー同士で交流しましょう
         </p>
       </div>
 

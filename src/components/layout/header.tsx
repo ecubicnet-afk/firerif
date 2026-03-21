@@ -20,7 +20,7 @@ export function Header() {
       <div className="container mx-auto flex h-14 items-center px-4">
         <Link href={session ? "/dashboard" : "/"} className="flex items-center gap-2 font-bold text-lg">
           <Flame className="h-6 w-6 text-primary" />
-          <span>ファイヤーライフ</span>
+          <span>ファイアライフ</span>
         </Link>
 
         {/* Desktop nav */}

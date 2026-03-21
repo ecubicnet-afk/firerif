@@ -140,7 +140,7 @@ export function RegisterForm() {
       <CardHeader>
         <CardTitle className="text-2xl">新規登録</CardTitle>
         <CardDescription>
-          ファイヤーライフコミュニティに参加しましょう
+          ファイアライフコミュニティに参加しましょう
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
