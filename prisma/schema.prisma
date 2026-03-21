@@ -27,6 +27,8 @@ model User {
   visionItems        VisionItem[]
   todos              Todo[]
   lifePlans          LifePlan[]
+  submissions        AssignmentSubmission[]
+  journalEntries     JournalEntry[]
 }
 
 enum Role {
@@ -265,5 +267,56 @@ model LifePlan {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
+}
+
+model Assignment {
+  id          String                 @id @default(cuid())
+  title       String
+  description String?
+  dueDate     DateTime?
+  sortOrder   Int                    @default(0)
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+
+  submissions AssignmentSubmission[]
+}
+
+model AssignmentSubmission {
+  id           String           @id @default(cuid())
+  assignmentId String
+  userId       String
+  content      String
+  status       SubmissionStatus @default(SUBMITTED)
+  feedback     String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  assignment Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([assignmentId, userId])
+  @@index([userId])
+}
+
+enum SubmissionStatus {
+  SUBMITTED
+  REVIEWED
+  COMPLETED
+}
+
+model JournalEntry {
+  id        String   @id @default(cuid())
+  userId    String
+  date      String
+  content   String
+  amount    Int?
+  note      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
   @@index([userId])
 }

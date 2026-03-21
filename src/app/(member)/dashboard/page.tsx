@@ -16,6 +16,8 @@ import {
   CheckSquare,
   Users,
   CreditCard,
+  ClipboardCheck,
+  BookOpen,
 } from "lucide-react";
 
 const quickLinks = [
@@ -28,6 +30,8 @@ const quickLinks = [
   { href: "/vision", label: "ビジョンボード", icon: Target, color: "text-pink-500" },
   { href: "/life-plan", label: "ライフプラン", icon: CalendarRange, color: "text-teal-500" },
   { href: "/todos", label: "ToDoリスト", icon: CheckSquare, color: "text-cyan-500" },
+  { href: "/assignments", label: "課題提出", icon: ClipboardCheck, color: "text-violet-500" },
+  { href: "/journal", label: "節約ジャーナル", icon: BookOpen, color: "text-lime-600" },
   { href: "/community", label: "コミュニティ", icon: Users, color: "text-indigo-500" },
 ];
 
