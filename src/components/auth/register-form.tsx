@@ -122,7 +122,7 @@ export function RegisterForm() {
             </div>
           )}
         </CardContent>
-        <CardFooter>
+        <CardFooter className="flex flex-col gap-3">
           <Button
             className="w-full"
             onClick={handleResubscribe}
@@ -130,6 +130,13 @@ export function RegisterForm() {
           >
             {loading ? "処理中..." : "サブスクリプションを再開する"}
           </Button>
+          {isBetaFree && (
+            <Link href="/community" className="w-full">
+              <Button variant="outline" className="w-full">
+                無料のコミュニティへ進む
+              </Button>
+            </Link>
+          )}
         </CardFooter>
       </Card>
     );

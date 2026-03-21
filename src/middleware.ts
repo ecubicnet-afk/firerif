@@ -74,9 +74,11 @@ export async function middleware(request: NextRequest) {
       token.subscriptionStatus !== "ACTIVE" &&
       token.subscriptionStatus !== "TRIALING"
     ) {
-      return NextResponse.redirect(
-        new URL("/register?resubscribe=true", request.url)
-      );
+      // Beta free: redirect to community instead of resubscribe page
+      const redirectUrl = COMMUNITY_BETA_FREE
+        ? "/community"
+        : "/register?resubscribe=true";
+      return NextResponse.redirect(new URL(redirectUrl, request.url));
     }
   }
 
