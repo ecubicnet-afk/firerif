@@ -34,6 +34,7 @@ export default function AdminQuestionsPage() {
   const [questions, setQuestions] = useState<QuestionWithUser[]>([]);
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState("");
+  const [syncError, setSyncError] = useState("");
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   const fetchQuestions = useCallback(async () => {
@@ -50,15 +51,27 @@ export default function AdminQuestionsPage() {
   async function handleSync() {
     setSyncing(true);
     setSyncResult("");
+    setSyncError("");
     try {
       const res = await fetch("/api/admin/sync-questions", { method: "POST" });
       const data = await res.json();
-      setSyncResult(
-        `${data.synced}/${data.total}件をスプレッドシートに同期しました`
-      );
+      if (!res.ok) {
+        setSyncError(data.error || "同期APIでエラーが発生しました");
+        return;
+      }
+      if (data.errors?.length > 0) {
+        setSyncError(data.errors[0]);
+        setSyncResult(
+          `${data.synced}/${data.total}件を同期（一部エラーあり）`
+        );
+      } else {
+        setSyncResult(
+          `${data.synced}/${data.total}件をスプレッドシートに同期しました`
+        );
+      }
       fetchQuestions();
     } catch {
-      setSyncResult("同期に失敗しました");
+      setSyncError("同期に失敗しました（ネットワークエラー）");
     } finally {
       setSyncing(false);
     }
@@ -94,8 +107,13 @@ export default function AdminQuestionsPage() {
         </Button>
       </div>
 
+      {syncError && (
+        <div className="rounded-md bg-red-100 text-red-800 p-3 text-sm">
+          {syncError}
+        </div>
+      )}
       {syncResult && (
-        <div className="rounded-md bg-primary/10 p-3 text-sm">
+        <div className={`rounded-md p-3 text-sm ${syncError ? "bg-yellow-100 text-yellow-800" : "bg-green-100 text-green-800"}`}>
           {syncResult}
         </div>
       )}
