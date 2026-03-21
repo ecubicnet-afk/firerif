@@ -120,10 +120,10 @@ export function DreamView({ dream, entries, courseId, onSaveDream }: DreamViewPr
             {!isCompleted && (
               <div className="mt-1.5 space-y-0.5">
                 <p className="text-xs text-muted-foreground">
-                  {dream.title}まであと {formatYen(remaining)}（20年後換算）
+                  {dream.title}まであと {formatYen(remaining)}（10年後換算）
                 </p>
                 <p className="text-xs text-purple-500">
-                  50年後換算: {formatYen(totalFV50)}
+                  20年後換算: {formatYen(totalFV50)}
                 </p>
               </div>
             )}

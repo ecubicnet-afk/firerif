@@ -1,7 +1,7 @@
 import type { CourseId, SavingsEntry } from "@/types/dream";
 import { COURSES_MAP } from "./dream-constants";
 
-const MAX_BLUR = 20;
+const MAX_BLUR = 12;
 
 /**
  * 複利計算式による未来価値 (Future Value of Annuity)
