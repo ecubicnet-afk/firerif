@@ -68,8 +68,8 @@ export function RegisterForm() {
       }
 
       if (isBetaFree) {
-        // Beta free: skip checkout, go directly to community
-        router.push("/community");
+        // Beta free: skip checkout, go directly to dashboard
+        router.push("/dashboard");
       } else {
         // Redirect to checkout
         const checkoutRes = await fetch("/api/stripe/checkout", {
@@ -131,9 +131,9 @@ export function RegisterForm() {
             {loading ? "処理中..." : "サブスクリプションを再開する"}
           </Button>
           {isBetaFree && (
-            <Link href="/community" className="w-full">
+            <Link href="/dashboard" className="w-full">
               <Button variant="outline" className="w-full">
-                無料のコミュニティへ進む
+                無料でサービスを利用する
               </Button>
             </Link>
           )}
