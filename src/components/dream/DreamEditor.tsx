@@ -18,7 +18,7 @@ function resizeImage(file: File, maxWidth: number): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
-      const img = new Image();
+      const img = document.createElement("img");
       img.onload = () => {
         const canvas = document.createElement("canvas");
         const scale = Math.min(1, maxWidth / img.width);
@@ -48,6 +48,7 @@ export function DreamEditor({ dream, onSave, onClose }: DreamEditorProps) {
     if (!file) return;
     const data = await resizeImage(file, 800);
     setPhotoData(data);
+    e.target.value = "";
   }, []);
 
   const handleSubmit = useCallback(

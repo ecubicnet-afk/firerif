@@ -46,7 +46,7 @@ export default function DreamPage() {
           <h1 className="text-2xl font-bold">節約ドリーム</h1>
         </div>
         <p className="text-muted-foreground mt-1 text-sm">
-          今日の節約が、20年後の夢のチケットに変わる
+          今日の節約が、10年後の夢のチケットに変わる
         </p>
       </div>
 

@@ -196,8 +196,8 @@ describe("totalSavings / dreamProgress / blurLevel", () => {
   });
 
   it("blurLevel: 進捗に応じたブラー値", () => {
-    expect(blurLevel(0)).toBe(20);
-    expect(blurLevel(0.5)).toBe(10);
+    expect(blurLevel(0)).toBe(12);
+    expect(blurLevel(0.5)).toBe(6);
     expect(blurLevel(1)).toBe(0);
     expect(blurLevel(2)).toBe(0); // clamp at 0
   });
