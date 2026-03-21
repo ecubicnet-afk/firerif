@@ -22,6 +22,8 @@ const memberPaths = [
   "/vision",
   "/todos",
   "/dream",
+  "/assignments",
+  "/journal",
 ];
 
 // Community is free during beta (requires login only, no subscription)

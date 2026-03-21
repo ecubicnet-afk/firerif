@@ -16,6 +16,8 @@ import {
   CheckSquare,
   Users,
   CalendarRange,
+  ClipboardCheck,
+  BookOpen,
 } from "lucide-react";
 
 const navItems = [
@@ -29,6 +31,8 @@ const navItems = [
   { href: "/vision", label: "ビジョンボード", icon: Target },
   { href: "/life-plan", label: "ライフプラン", icon: CalendarRange },
   { href: "/todos", label: "ToDoリスト", icon: CheckSquare },
+  { href: "/assignments", label: "課題提出", icon: ClipboardCheck },
+  { href: "/journal", label: "節約ジャーナル", icon: BookOpen },
   { href: "/community", label: "コミュニティ", icon: Users },
 ];
 
