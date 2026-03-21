@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -31,13 +32,28 @@ const navItems = [
   { href: "/community", label: "コミュニティ", icon: Users },
 ];
 
+const isBetaFree = process.env.NEXT_PUBLIC_COMMUNITY_BETA_FREE === "true";
+
+function useVisibleNavItems() {
+  const { data: session } = useSession();
+  const hasSubscription =
+    session?.user?.subscriptionStatus === "ACTIVE" ||
+    session?.user?.subscriptionStatus === "TRIALING";
+
+  if (isBetaFree && !hasSubscription) {
+    return navItems.filter((item) => item.href === "/community");
+  }
+  return navItems;
+}
+
 export function Sidebar() {
   const pathname = usePathname();
+  const visibleItems = useVisibleNavItems();
 
   return (
     <aside className="hidden md:flex w-64 flex-col border-r bg-muted/40 p-4">
       <nav className="space-y-1">
-        {navItems.map((item) => {
+        {visibleItems.map((item) => {
           const isActive =
             pathname === item.href || pathname.startsWith(item.href + "/");
           return (
@@ -63,11 +79,12 @@ export function Sidebar() {
 
 export function MobileNav() {
   const pathname = usePathname();
+  const visibleItems = useVisibleNavItems();
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t bg-background">
       <div className="flex overflow-x-auto">
-        {navItems.slice(0, 6).map((item) => {
+        {visibleItems.slice(0, 6).map((item) => {
           const isActive =
             pathname === item.href || pathname.startsWith(item.href + "/");
           return (
