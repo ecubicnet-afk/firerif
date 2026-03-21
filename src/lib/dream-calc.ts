@@ -17,16 +17,16 @@ export function calculateFV(amount: number, annualRate: number, years: number): 
   return Math.round(amount * ((Math.pow(1 + annualRate, years) - 1) / annualRate));
 }
 
-/** コースの年利で20年後のFVを計算 */
+/** コースの年利で10年後のFVを計算 */
 export function futureValue(amount: number, courseId: CourseId): number {
   const course = COURSES_MAP[courseId];
-  return calculateFV(amount, course.annualRate, 20);
+  return calculateFV(amount, course.annualRate, 10);
 }
 
-/** コースの年利で50年後のFVを計算 */
+/** コースの年利で20年後のFVを計算 */
 export function futureValue50(amount: number, courseId: CourseId): number {
   const course = COURSES_MAP[courseId];
-  return calculateFV(amount, course.annualRate, 50);
+  return calculateFV(amount, course.annualRate, 20);
 }
 
 /** コースの年利で20年後の倍率を計算 */

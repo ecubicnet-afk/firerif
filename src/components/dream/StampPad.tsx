@@ -23,7 +23,7 @@ export function StampPad({ stamps, courseId, onSave, onEditStamps }: StampPadPro
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const course = COURSES_MAP[courseId];
-  const mult20 = multiplierForYears(course.annualRate, 20);
+  const mult20 = multiplierForYears(course.annualRate, 10);
 
   const handleStampTap = useCallback(
     async (stamp: Stamp) => {
@@ -118,10 +118,10 @@ export function StampPad({ stamps, courseId, onSave, onEditStamps }: StampPadPro
                   {ratio}倍に成長
                 </span>
                 <span className="text-[10px] text-red-500 font-bold">
-                  → 20年後 {formatYen(fv)}
+                  → 10年後 {formatYen(fv)}
                 </span>
                 <span className="text-[10px] text-purple-500 font-bold">
-                  → 50年後 {formatYen(fv50)}
+                  → 20年後 {formatYen(fv50)}
                 </span>
               </button>
             );

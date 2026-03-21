@@ -64,15 +64,15 @@ describe("futureValue / futureValue50 (コース別)", () => {
   for (const { courseId, amount } of testCases) {
     const course = COURSES_MAP[courseId];
 
-    it(`${course.label}: ¥${amount} の20年後FV`, () => {
+    it(`${course.label}: ¥${amount} の10年後FV`, () => {
       const result = futureValue(amount, courseId);
-      const expected = Math.round(amount * ((Math.pow(1 + course.annualRate, 20) - 1) / course.annualRate));
+      const expected = Math.round(amount * ((Math.pow(1 + course.annualRate, 10) - 1) / course.annualRate));
       expect(result).toBe(expected);
     });
 
-    it(`${course.label}: ¥${amount} の50年後FV`, () => {
+    it(`${course.label}: ¥${amount} の20年後FV`, () => {
       const result = futureValue50(amount, courseId);
-      const expected = Math.round(amount * ((Math.pow(1 + course.annualRate, 50) - 1) / course.annualRate));
+      const expected = Math.round(amount * ((Math.pow(1 + course.annualRate, 20) - 1) / course.annualRate));
       expect(result).toBe(expected);
     });
   }
@@ -206,31 +206,31 @@ describe("totalSavings / dreamProgress / blurLevel", () => {
 // ── 具体的なFV計算の検算 ──
 
 describe("具体的なスタンプのFV検算", () => {
-  it("自炊弁当 ¥800 × バランスコース(7%) × 20年", () => {
+  it("自炊弁当 ¥800 × バランスコース(7%) × 10年", () => {
     const fv = futureValue(800, "balanced");
-    // 800 × ((1.07^20 - 1) / 0.07) ≈ 800 × 40.995 ≈ 32,796
-    expect(fv).toBeGreaterThanOrEqual(32796);
-    expect(fv).toBeLessThanOrEqual(32797);
+    // 800 × ((1.07^10 - 1) / 0.07) ≈ 800 × 13.816 ≈ 11,053
+    const expected = Math.round(800 * ((Math.pow(1.07, 10) - 1) / 0.07));
+    expect(fv).toBe(expected);
   });
 
-  it("セールスルー ¥10000 × 積極コース(10%) × 50年", () => {
+  it("セールスルー ¥10000 × 積極コース(10%) × 20年", () => {
     const fv = futureValue50(10000, "aggressive");
-    // 10000 × ((1.10^50 - 1) / 0.10) = 10000 × 1163.91 ≈ 11,639,085
-    expect(fv).toBeGreaterThan(11_000_000);
-    expect(fv).toBeLessThan(12_000_000);
+    // 10000 × ((1.10^20 - 1) / 0.10) = 10000 × 57.275 ≈ 572,750
+    const expected = Math.round(10000 * ((Math.pow(1.10, 20) - 1) / 0.10));
+    expect(fv).toBe(expected);
   });
 
-  it("レジ袋パス ¥10 × 堅実コース(5%) × 20年", () => {
+  it("レジ袋パス ¥10 × 堅実コース(5%) × 10年", () => {
     const fv = futureValue(10, "conservative");
-    // 10 × ((1.05^20 - 1) / 0.05) = 10 × 33.066 ≈ 331
-    expect(fv).toBeGreaterThanOrEqual(330);
-    expect(fv).toBeLessThanOrEqual(332);
+    // 10 × ((1.05^10 - 1) / 0.05) = 10 × 12.578 ≈ 126
+    const expected = Math.round(10 * ((Math.pow(1.05, 10) - 1) / 0.05));
+    expect(fv).toBe(expected);
   });
 
-  it("衝動買い我慢 ¥5000 × バランスコース(7%) × 50年", () => {
+  it("衝動買い我慢 ¥5000 × バランスコース(7%) × 20年", () => {
     const fv = futureValue50(5000, "balanced");
-    // 5000 × ((1.07^50 - 1) / 0.07) ≈ 5000 × 406.53 ≈ 2,032,644
-    expect(fv).toBeGreaterThan(2_000_000);
-    expect(fv).toBeLessThan(2_100_000);
+    // 5000 × ((1.07^20 - 1) / 0.07) ≈ 5000 × 40.995 ≈ 204,977
+    const expected = Math.round(5000 * ((Math.pow(1.07, 20) - 1) / 0.07));
+    expect(fv).toBe(expected);
   });
 });

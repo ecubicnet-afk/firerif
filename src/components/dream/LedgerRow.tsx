@@ -18,7 +18,7 @@ export function LedgerRow({ entry, courseId, onDelete }: LedgerRowProps) {
   const fv = futureValue(entry.amount, courseId);
   const fv50 = futureValue50(entry.amount, courseId);
   const course = COURSES_MAP[courseId];
-  const ratio20 = Math.round(multiplierForYears(course.annualRate, 20) * 10) / 10;
+  const ratio20 = Math.round(multiplierForYears(course.annualRate, 10) * 10) / 10;
 
   return (
     <div

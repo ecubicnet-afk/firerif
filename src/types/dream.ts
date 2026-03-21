@@ -32,8 +32,8 @@ export interface Course {
   id: 'aggressive' | 'standard' | 'balanced' | 'conservative';
   label: string;
   icon: string;
-  multiplier: number;
-  multiplier50: number;
+  multiplier: number;    // 10年後の倍率
+  multiplier50: number;  // 20年後の倍率
   annualRate: number;
   indexName: string;
   color: string;
