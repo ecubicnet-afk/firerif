@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
+  BookMarked,
   Video,
   Radio,
   MessageCircleQuestion,
@@ -21,6 +22,7 @@ import {
 
 const navItems = [
   { href: "/dashboard", label: "ダッシュボード", icon: LayoutDashboard },
+  { href: "/guide", label: "活用ガイド", icon: BookMarked },
   { href: "/courses", label: "動画コース", icon: Video },
   { href: "/live", label: "ライブ配信", icon: Radio },
   { href: "/qa", label: "Q&A", icon: MessageCircleQuestion },
