@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 
+const isBetaFree = process.env.NEXT_PUBLIC_COMMUNITY_BETA_FREE === "true";
+
 export function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -65,17 +67,22 @@ export function RegisterForm() {
         return;
       }
 
-      // Redirect to checkout
-      const checkoutRes = await fetch("/api/stripe/checkout", {
-        method: "POST",
-      });
-
-      const checkoutData = await checkoutRes.json();
-
-      if (checkoutData.url) {
-        window.location.href = checkoutData.url;
+      if (isBetaFree) {
+        // Beta free: skip checkout, go directly to community
+        router.push("/community");
       } else {
-        router.push("/dashboard");
+        // Redirect to checkout
+        const checkoutRes = await fetch("/api/stripe/checkout", {
+          method: "POST",
+        });
+
+        const checkoutData = await checkoutRes.json();
+
+        if (checkoutData.url) {
+          window.location.href = checkoutData.url;
+        } else {
+          router.push("/dashboard");
+        }
       }
     } catch {
       setError("登録中にエラーが発生しました");
@@ -189,7 +196,7 @@ export function RegisterForm() {
         </CardContent>
         <CardFooter className="flex flex-col gap-4">
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "登録中..." : "登録して決済へ進む"}
+            {loading ? "登録中..." : isBetaFree ? "無料で登録する" : "登録して決済へ進む"}
           </Button>
           <p className="text-sm text-muted-foreground text-center">
             既にアカウントをお持ちの方は{" "}
