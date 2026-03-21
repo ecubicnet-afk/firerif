@@ -17,10 +17,11 @@ export async function POST() {
   });
 
   if (pendingQuestions.length === 0) {
-    return NextResponse.json({ synced: 0 });
+    return NextResponse.json({ synced: 0, total: 0 });
   }
 
   let synced = 0;
+  const errors: string[] = [];
 
   for (const q of pendingQuestions) {
     try {
@@ -38,9 +39,12 @@ export async function POST() {
 
       synced++;
     } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "不明なエラー";
       console.error(`Failed to sync question ${q.id}:`, error);
+      errors.push(message);
     }
   }
 
-  return NextResponse.json({ synced, total: pendingQuestions.length });
+  return NextResponse.json({ synced, total: pendingQuestions.length, errors });
 }
