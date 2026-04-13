@@ -131,7 +131,7 @@ export default function LandingPage() {
               <CardContent className="p-8 text-center">
                 <h3 className="text-xl font-bold mb-2">メンバーシップ</h3>
                 <div className="flex items-baseline justify-center gap-1 mb-4">
-                  <span className="text-4xl font-bold">¥5,000</span>
+                  <span className="text-4xl font-bold">¥5,980</span>
                   <span className="text-muted-foreground">/ 月</span>
                 </div>
                 <ul className="text-left space-y-3 mb-8">
