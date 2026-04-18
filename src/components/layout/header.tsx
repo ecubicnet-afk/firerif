@@ -12,8 +12,9 @@ import {
 import { useState } from "react";
 
 export function Header() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const isLoading = status === "loading";
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -25,7 +26,9 @@ export function Header() {
 
         {/* Desktop nav */}
         <nav className="ml-auto hidden md:flex items-center gap-4">
-          {session ? (
+          {isLoading ? (
+            <div className="h-8 w-32 bg-muted animate-pulse rounded" />
+          ) : session ? (
             <>
               <span className="text-sm text-muted-foreground">
                 {session.user.name || session.user.email}
@@ -72,7 +75,9 @@ export function Header() {
       {/* Mobile menu */}
       {mobileMenuOpen && (
         <div className="md:hidden border-t p-4 space-y-2 bg-background">
-          {session ? (
+          {isLoading ? (
+            <div className="h-6 w-24 bg-muted animate-pulse rounded mx-2" />
+          ) : session ? (
             <>
               <p className="text-sm text-muted-foreground px-2">
                 {session.user.name || session.user.email}

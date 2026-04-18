@@ -382,7 +382,12 @@ export default function AssetsPage() {
   const fetchRate = useCallback(async () => {
     setIsRateLoading(true);
     try {
-      const res = await fetch("https://open.er-api.com/v6/latest/USD");
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 5000);
+      const res = await fetch("https://open.er-api.com/v6/latest/USD", {
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
       if (!res.ok) throw new Error("レート取得失敗");
       const data = await res.json();
       if (data.rates?.JPY) setUsdJpyRate(data.rates.JPY);
@@ -396,6 +401,7 @@ export default function AssetsPage() {
   const fetchHoldings = useCallback(async () => {
     try {
       const res = await fetch("/api/assets/holdings");
+      if (!res.ok) throw new Error(`holdings取得失敗: ${res.status}`);
       const data = await res.json();
       if (Array.isArray(data)) setAccountDatasets(data);
     } catch (err) {
@@ -406,6 +412,7 @@ export default function AssetsPage() {
   const fetchSnapshots = useCallback(async () => {
     try {
       const res = await fetch("/api/assets/snapshots");
+      if (!res.ok) throw new Error(`snapshots取得失敗: ${res.status}`);
       const data = await res.json();
       if (Array.isArray(data)) setHistory(data);
     } catch (err) {
@@ -747,8 +754,11 @@ export default function AssetsPage() {
   useEffect(() => {
     const init = async () => {
       setLoading(true);
-      await Promise.all([fetchHoldings(), fetchSnapshots(), fetchRate()]);
-      setLoading(false);
+      try {
+        await Promise.all([fetchHoldings(), fetchSnapshots(), fetchRate()]);
+      } finally {
+        setLoading(false);
+      }
     };
     init();
   }, [fetchHoldings, fetchSnapshots, fetchRate]);

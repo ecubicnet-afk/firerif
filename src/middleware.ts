@@ -6,6 +6,7 @@ const publicPaths = [
   "/",
   "/login",
   "/register",
+  "/terms",
   "/api/auth",
   "/api/stripe/webhook",
 ];

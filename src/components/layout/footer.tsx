@@ -9,7 +9,7 @@ export function Footer() {
           <span>&copy; {new Date().getFullYear()} ファイアライフ</span>
         </div>
         <div className="flex gap-4 text-sm text-muted-foreground">
-          <a href="#" className="hover:text-foreground">利用規約</a>
+          <a href="/terms" className="hover:text-foreground">利用規約</a>
           <a href="https://firelife-community.netlify.app/privacy.html" target="_blank" rel="noopener noreferrer" className="hover:text-foreground">プライバシーポリシー</a>
           <a href="https://firelife-community.netlify.app/tokushoho.html" target="_blank" rel="noopener noreferrer" className="hover:text-foreground">特定商取引法に基づく表記</a>
         </div>
