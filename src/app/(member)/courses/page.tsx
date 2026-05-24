@@ -14,9 +14,9 @@ export default async function CoursesPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">動画コース</h1>
-        <p className="text-muted-foreground mt-1">
-          FIREに必要な知識を体系的に学べる動画コースです
+        <h1 className="text-xl md:text-2xl font-bold">動画コース</h1>
+        <p className="text-muted-foreground mt-1 text-sm leading-relaxed">
+          まずは「最強の節約コーチング（全10回）」で、ゼロから投資資金を生み出す。1ヶ月以内に見切るのがおすすめです。
         </p>
       </div>
 

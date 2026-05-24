@@ -36,9 +36,9 @@ export default async function LivePage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">ライブ配信</h1>
-        <p className="text-muted-foreground mt-1">
-          月2回のライブ配信でリアルタイムに学べます
+        <h1 className="text-xl md:text-2xl font-bold">ライブ配信</h1>
+        <p className="text-muted-foreground mt-1 text-sm leading-relaxed">
+          月2回。月初「守りのマネー診断会」（みんなで家計簿）＋月中「攻めのマネー戦略会」（投資相談・ポート）。Zoom参加・録画あり。
         </p>
       </div>
 
