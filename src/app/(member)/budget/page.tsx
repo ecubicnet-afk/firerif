@@ -36,11 +36,11 @@ export default function BudgetPage() {
       {/* Header */}
       <div>
         <div className="flex items-center gap-2">
-          <Wallet className="h-5 w-5 text-green-600" />
-          <h1 className="text-2xl font-bold">家計簿（6枠・月末1回）</h1>
+          <Wallet className="h-6 w-6 text-primary" />
+          <h1 className="text-xl md:text-2xl font-bold">ズボラ6マス家計簿</h1>
         </div>
-        <p className="text-muted-foreground mt-1 text-sm">
-          毎日つけるのをやめる。月末に1回、明細を見ながら振り分けるだけ。
+        <p className="text-muted-foreground mt-1 text-sm leading-relaxed">
+          毎日つけるのをやめる。月末に1回、明細を見ながら6マスに振り分けるだけ。
         </p>
       </div>
 

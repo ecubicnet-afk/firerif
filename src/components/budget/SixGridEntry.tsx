@@ -139,21 +139,21 @@ export function SixGridEntry({ year, month, gridTotals, onAddEntry, onDeleteEntr
                         placeholder="項目（例: 通信費）"
                         value={category}
                         onChange={(e) => setCategory(e.target.value)}
-                        className="col-span-3 h-8 text-xs"
+                        className="col-span-3 h-11 text-base"
                       />
                       <Input
                         type="number"
+                        inputMode="numeric"
                         placeholder="金額"
                         value={amount}
                         onChange={(e) => setAmount(e.target.value)}
-                        className="col-span-2 h-8 text-xs"
+                        className="col-span-2 h-11 text-base"
                       />
                     </div>
                     <div className="flex gap-2">
                       <Button
                         type="button"
-                        size="sm"
-                        className="flex-1 text-xs"
+                        className="flex-1 h-11"
                         disabled={saving || !category.trim() || !amount}
                         onClick={() => handleAdd(cell.costType, cell.payMethod)}
                       >
@@ -161,9 +161,8 @@ export function SixGridEntry({ year, month, gridTotals, onAddEntry, onDeleteEntr
                       </Button>
                       <Button
                         type="button"
-                        size="sm"
                         variant="outline"
-                        className="text-xs"
+                        className="h-11"
                         onClick={() => {
                           setOpenCell(null);
                           setCategory("");
@@ -177,16 +176,15 @@ export function SixGridEntry({ year, month, gridTotals, onAddEntry, onDeleteEntr
                 ) : (
                   <Button
                     type="button"
-                    size="sm"
                     variant="outline"
-                    className="w-full text-xs"
+                    className="w-full h-11 text-sm"
                     onClick={() => {
                       setOpenCell(key);
                       setCategory("");
                       setAmount("");
                     }}
                   >
-                    <Plus className="mr-1 h-3.5 w-3.5" />
+                    <Plus className="mr-1 h-4 w-4" />
                     ここに記録を追加
                   </Button>
                 )}

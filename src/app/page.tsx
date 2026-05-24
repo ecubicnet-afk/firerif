@@ -75,14 +75,14 @@ export default function LandingPage() {
           <div className="flex justify-center mb-6">
             <Flame className="h-16 w-16 text-primary" />
           </div>
-          <h1 className="text-3xl md:text-5xl font-bold mb-4 tracking-tight">
-            お金と時間に余裕を
+          <h1 className="text-3xl md:text-5xl font-bold mb-4 tracking-tight leading-tight">
+            自分の<span className="text-primary">『with FIRE』</span>を
             <br />
-            <span className="text-primary">仲間と"with FIRE"</span>
+            作っていく
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8 leading-relaxed">
-            完全リタイアじゃなく、資産収入で「お金と時間」に余裕を作る生き方＝with FIRE。
-            節約で守りを固め、新NISAで増やす。それを仲間と一緒に続けるコミュニティです。
+            資産収入で『お金と時間』に余裕を。仕事に縛られすぎず、家族や趣味も大切に。今を豊かに、老後も安心。
+            それが私たちが提唱する『with FIRE（ウィズファイア）』です。
           </p>
           <div className="flex gap-4 justify-center">
             <Link href="/register">
