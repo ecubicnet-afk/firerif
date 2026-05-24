@@ -42,7 +42,8 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json({ id: user.id, email: user.email });
-  } catch {
+  } catch (e) {
+    console.error("[register] 登録エラー:", e);
     return NextResponse.json(
       { error: "登録中にエラーが発生しました" },
       { status: 500 }
