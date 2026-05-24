@@ -115,21 +115,34 @@ enum QuestionStatus {
 }
 
 model BudgetEntry {
-  id        String     @id @default(cuid())
+  id        String        @id @default(cuid())
   userId    String
   year      Int
   month     Int
-  day       Int        @default(1)
+  day       Int           @default(1)
   category  String
   amount    Int
   type      BudgetType
+  costType  CostType?     // 固定費 / 変動費（6枠分類）
+  payMethod PayMethod?    // クレカ / 口座引落 / 現金（6枠分類）
   memo      String?
   imageData String?
-  createdAt DateTime   @default(now())
+  createdAt DateTime      @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, year, month])
+}
+
+enum CostType {
+  FIXED
+  VARIABLE
+}
+
+enum PayMethod {
+  CARD
+  BANK
+  CASH
 }
 
 model BudgetPlan {

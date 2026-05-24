@@ -8,33 +8,24 @@ import {
   BookMarked,
   Video,
   Radio,
-  MessageCircleQuestion,
   Wallet,
   Sparkles,
   TrendingUp,
-  Target,
-  CheckSquare,
   Users,
-  CalendarRange,
-  ClipboardCheck,
-  BookOpen,
 } from "lucide-react";
 
+// ナビ並び順（仕様 C案・活用ガイド4STEP順）
+// 削除対象（Q&A/ToDo/課題提出/節約ジャーナル/ライフプラン/ビジョンボード）はナビから非表示
+// ※ ページ本体やルートは残置（リンクを外すのみ・不可逆な大量削除は避ける）
 const navItems = [
   { href: "/dashboard", label: "ダッシュボード", icon: LayoutDashboard },
   { href: "/guide", label: "活用ガイド", icon: BookMarked },
-  { href: "/courses", label: "動画コース", icon: Video },
-  { href: "/live", label: "ライブ配信", icon: Radio },
-  { href: "/qa", label: "Q&A", icon: MessageCircleQuestion },
-  { href: "/budget", label: "家計簿", icon: Wallet },
   { href: "/dream", label: "節約ドリーム", icon: Sparkles },
-  { href: "/assets", label: "資産管理", icon: TrendingUp },
-  { href: "/vision", label: "ビジョンボード", icon: Target },
-  { href: "/life-plan", label: "ライフプラン", icon: CalendarRange },
-  { href: "/todos", label: "ToDoリスト", icon: CheckSquare },
-  { href: "/assignments", label: "課題提出", icon: ClipboardCheck },
-  { href: "/journal", label: "節約ジャーナル", icon: BookOpen },
   { href: "/community", label: "コミュニティ", icon: Users },
+  { href: "/courses", label: "動画コース", icon: Video },
+  { href: "/budget", label: "家計簿", icon: Wallet },
+  { href: "/live", label: "ライブ配信", icon: Radio },
+  { href: "/assets", label: "資産管理", icon: TrendingUp },
 ];
 
 function useVisibleNavItems() {

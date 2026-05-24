@@ -55,3 +55,40 @@ export const EXPENSE_GROUP_CONFIG: Record<ExpenseGroup, { color: string; label: 
   "固定費": { color: "text-blue-600", label: "固定費" },
   "特別出費": { color: "text-purple-600", label: "特別出費" },
 };
+
+// ============================================================
+// 6枠家計簿（2026-05-24 改造）: 固定費/変動費 × クレカ/口座/現金
+// ============================================================
+export type CostType = "FIXED" | "VARIABLE";
+export type PayMethod = "CARD" | "BANK" | "CASH";
+
+export const COST_TYPE_CONFIG: Record<CostType, { label: string; color: string }> = {
+  FIXED: { label: "固定費", color: "text-blue-600" },
+  VARIABLE: { label: "変動費", color: "text-orange-600" },
+};
+
+export const PAY_METHOD_CONFIG: Record<PayMethod, { label: string; short: string }> = {
+  CARD: { label: "クレジットカード", short: "クレカ" },
+  BANK: { label: "銀行口座引き落とし", short: "口座" },
+  CASH: { label: "現金", short: "現金" },
+};
+
+export const COST_TYPES: CostType[] = ["FIXED", "VARIABLE"];
+export const PAY_METHODS: PayMethod[] = ["CARD", "BANK", "CASH"];
+
+// 6枠の並び（①〜⑥）: 固定費×3 → 変動費×3
+export interface GridCell {
+  costType: CostType;
+  payMethod: PayMethod;
+  label: string;
+  num: number;
+}
+
+export const SIX_GRID_CELLS: GridCell[] = [
+  { costType: "FIXED", payMethod: "CARD", label: "固定費 × クレカ", num: 1 },
+  { costType: "VARIABLE", payMethod: "CARD", label: "変動費 × クレカ", num: 2 },
+  { costType: "FIXED", payMethod: "BANK", label: "固定費 × 口座", num: 3 },
+  { costType: "VARIABLE", payMethod: "BANK", label: "変動費 × 口座", num: 4 },
+  { costType: "FIXED", payMethod: "CASH", label: "固定費 × 現金", num: 5 },
+  { costType: "VARIABLE", payMethod: "CASH", label: "変動費 × 現金", num: 6 },
+];

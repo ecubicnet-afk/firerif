@@ -13,7 +13,7 @@ export async function PUT(
   }
 
   const { id } = await params;
-  const { category, amount, type, memo } = await request.json();
+  const { category, amount, type, costType, payMethod, memo } = await request.json();
 
   const existing = await prisma.budgetEntry.findFirst({
     where: { id, userId: session.user.id },
@@ -25,7 +25,14 @@ export async function PUT(
 
   const updated = await prisma.budgetEntry.update({
     where: { id },
-    data: { category, amount: Math.round(amount), type, memo },
+    data: {
+      category,
+      amount: Math.round(amount),
+      type,
+      ...(costType !== undefined ? { costType: costType || null } : {}),
+      ...(payMethod !== undefined ? { payMethod: payMethod || null } : {}),
+      memo,
+    },
   });
 
   return NextResponse.json(updated);

@@ -1,41 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
 import { useBudget } from "@/hooks/use-budget";
 import { MonthSelector } from "@/components/budget/MonthSelector";
-import { MonthlySummary } from "@/components/budget/MonthlySummary";
-import { WeeklyGrid } from "@/components/budget/WeeklyGrid";
-import { FixedCosts } from "@/components/budget/FixedCosts";
-import { SpecialExpenses } from "@/components/budget/SpecialExpenses";
-import { IncomeAndSavings } from "@/components/budget/IncomeAndSavings";
-import { ThreeStepPlan } from "@/components/budget/ThreeStepPlan";
-import { BudgetTab } from "@/components/budget/BudgetTab";
-import { QuickEntry } from "@/components/budget/QuickEntry";
+import { SixGridEntry } from "@/components/budget/SixGridEntry";
 import { Button } from "@/components/ui/button";
-import { Plus, Wallet, Loader2 } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Wallet, Loader2, Share2 } from "lucide-react";
 
-type Tab = "overview" | "weekly" | "fixed" | "income" | "budget" | "plan";
-
-const TABS: { key: Tab; label: string }[] = [
-  { key: "overview", label: "概要" },
-  { key: "weekly", label: "週間記録" },
-  { key: "fixed", label: "固定費" },
-  { key: "income", label: "収入・貯蓄" },
-  { key: "budget", label: "予算" },
-  { key: "plan", label: "計画" },
-];
+function yen(n: number) {
+  return `¥${n.toLocaleString("ja-JP")}`;
+}
 
 export default function BudgetPage() {
-  const [tab, setTab] = useState<Tab>("overview");
-  const [showEntry, setShowEntry] = useState(false);
-
   const {
     year, month, prevMonth, nextMonth,
-    entries, plans, loading,
-    addEntry, deleteEntry, addPlan, deletePlan,
-    addTemplate, deleteTemplate,
-    mergedFixedCosts, mergedIncome, mergedSavings, customFixedCategories,
-    totals, expenseByCategory, weeklyGroups,
+    loading,
+    addEntry, deleteEntry,
+    gridTotals, sixGridSummary,
   } = useBudget();
 
   if (loading) {
@@ -55,134 +37,58 @@ export default function BudgetPage() {
       <div>
         <div className="flex items-center gap-2">
           <Wallet className="h-5 w-5 text-green-600" />
-          <h1 className="text-2xl font-bold">家計ノート</h1>
+          <h1 className="text-2xl font-bold">家計簿（6枠・月末1回）</h1>
         </div>
         <p className="text-muted-foreground mt-1 text-sm">
-          つけるだけで「節約力」がアップする
+          毎日つけるのをやめる。月末に1回、明細を見ながら振り分けるだけ。
         </p>
       </div>
 
       {/* Month selector */}
       <MonthSelector year={year} month={month} onPrev={prevMonth} onNext={nextMonth} />
 
-      {/* Tab bar */}
-      <div className="flex gap-1 overflow-x-auto pb-1">
-        {TABS.map(t => (
-          <Button
-            key={t.key}
-            variant={tab === t.key ? "default" : "outline"}
-            size="sm"
-            className="text-xs shrink-0"
-            onClick={() => setTab(t.key)}
-          >
-            {t.label}
+      {/* Summary strip */}
+      <Card>
+        <CardContent className="grid grid-cols-3 gap-2 py-4 text-center">
+          <div>
+            <p className="text-xs text-muted-foreground">固定費</p>
+            <p className="text-lg font-bold tabular-nums text-blue-600">
+              {yen(sixGridSummary.fixedTotal)}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">変動費</p>
+            <p className="text-lg font-bold tabular-nums text-orange-600">
+              {yen(sixGridSummary.variableTotal)}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">支出合計</p>
+            <p className="text-lg font-bold tabular-nums">
+              {yen(sixGridSummary.expenseTotal)}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 6-grid input */}
+      <SixGridEntry
+        year={year}
+        month={month}
+        gridTotals={gridTotals}
+        onAddEntry={addEntry}
+        onDeleteEntry={deleteEntry}
+      />
+
+      {/* Share summary link */}
+      <div className="flex justify-center pt-2">
+        <Link href={`/budget/summary?year=${year}&month=${month}`}>
+          <Button variant="outline">
+            <Share2 className="mr-2 h-4 w-4" />
+            月末サマリーを見る（Discord共有用）
           </Button>
-        ))}
+        </Link>
       </div>
-
-      {/* Tab content */}
-      {tab === "overview" && (
-        <MonthlySummary
-          totals={totals}
-          expenseByCategory={expenseByCategory}
-          year={year}
-          month={month}
-          plans={plans}
-          entries={entries}
-          onAddEntry={addEntry}
-          onDeleteEntry={deleteEntry}
-          mergedFixedCosts={mergedFixedCosts}
-          mergedSavings={mergedSavings}
-        />
-      )}
-
-      {tab === "weekly" && (
-        <div className="space-y-4">
-          <WeeklyGrid
-            year={year}
-            month={month}
-            weeklyGroups={weeklyGroups}
-          />
-          <SpecialExpenses
-            year={year}
-            month={month}
-            entries={entries}
-            onAddEntry={addEntry}
-            onDeleteEntry={deleteEntry}
-          />
-        </div>
-      )}
-
-      {tab === "fixed" && (
-        <FixedCosts
-          year={year}
-          month={month}
-          mergedEntries={mergedFixedCosts}
-          customCategories={customFixedCategories}
-          onAddEntry={addEntry}
-          onDeleteEntry={deleteEntry}
-          onAddTemplate={addTemplate}
-          onDeleteTemplate={deleteTemplate}
-        />
-      )}
-
-      {tab === "income" && (
-        <IncomeAndSavings
-          year={year}
-          month={month}
-          mergedIncome={mergedIncome}
-          mergedSavings={mergedSavings}
-          onAddEntry={addEntry}
-          onDeleteEntry={deleteEntry}
-          onAddTemplate={addTemplate}
-          onDeleteTemplate={deleteTemplate}
-        />
-      )}
-
-      {tab === "budget" && (
-        <BudgetTab
-          year={year}
-          month={month}
-          totals={totals}
-          plans={plans}
-          entries={entries}
-          expenseByCategory={expenseByCategory}
-          mergedFixedCosts={mergedFixedCosts}
-          customFixedCategories={customFixedCategories}
-          onAddPlan={addPlan}
-          onDeletePlan={deletePlan}
-        />
-      )}
-
-      {tab === "plan" && (
-        <ThreeStepPlan
-          year={year}
-          month={month}
-          totals={totals}
-          plans={plans}
-          onAddPlan={addPlan}
-        />
-      )}
-
-      {/* FAB - Quick entry button */}
-      {!showEntry && (
-        <button
-          onClick={() => setShowEntry(true)}
-          className="fixed bottom-20 md:bottom-6 right-4 md:right-8 z-40 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:opacity-90 transition-opacity"
-        >
-          <Plus className="h-6 w-6" />
-        </button>
-      )}
-
-      {/* Quick entry modal */}
-      {showEntry && (
-        <QuickEntry
-          year={year}
-          month={month}
-          onAddEntry={addEntry}
-          onClose={() => setShowEntry(false)}
-        />
-      )}
     </div>
   );
 }

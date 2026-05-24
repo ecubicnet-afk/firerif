@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { getExpenseGroup, FIXED_COST_CATEGORIES, INCOME_CATEGORIES, SAVING_CATEGORIES } from "@/lib/budget-categories";
-import type { ExpenseGroup } from "@/lib/budget-categories";
+import { getExpenseGroup, FIXED_COST_CATEGORIES, INCOME_CATEGORIES, SAVING_CATEGORIES, SIX_GRID_CELLS } from "@/lib/budget-categories";
+import type { ExpenseGroup, CostType, PayMethod } from "@/lib/budget-categories";
 
 export interface BudgetEntry {
   id: string;
@@ -12,6 +12,8 @@ export interface BudgetEntry {
   category: string;
   amount: number;
   type: "INCOME" | "EXPENSE" | "SAVING";
+  costType: CostType | null;
+  payMethod: PayMethod | null;
   memo: string | null;
   imageData: string | null;
   createdAt: string;
@@ -101,6 +103,7 @@ export function useBudget() {
     year: number; month: number; day: number;
     category: string; amount: number;
     type: "INCOME" | "EXPENSE" | "SAVING";
+    costType?: CostType | null; payMethod?: PayMethod | null;
     memo?: string; imageData?: string | null;
   }) {
     await fetch("/api/budget", {
@@ -238,6 +241,7 @@ export function useBudget() {
         year, month, day: m.day,
         category: m.category, amount: m.amount,
         type: "EXPENSE" as const,
+        costType: null, payMethod: null,
         memo: m.memo, imageData: null, createdAt: "",
       })),
       ...mergedIncome.map(m => ({
@@ -245,6 +249,7 @@ export function useBudget() {
         year, month, day: m.day,
         category: m.category, amount: m.amount,
         type: "INCOME" as const,
+        costType: null, payMethod: null,
         memo: m.memo, imageData: null, createdAt: "",
       })),
       ...mergedSavings.map(m => ({
@@ -252,6 +257,7 @@ export function useBudget() {
         year, month, day: m.day,
         category: m.category, amount: m.amount,
         type: "SAVING" as const,
+        costType: null, payMethod: null,
         memo: m.memo, imageData: null, createdAt: "",
       })),
     ];
@@ -333,6 +339,48 @@ export function useBudget() {
     return groups;
   }, [allEffectiveEntries, year, month, entries, mergedFixedCosts]);
 
+  // ============================================================
+  // 6枠家計簿の集計（月末1回入力モデル）
+  // costType + payMethod を持つ EXPENSE エントリのみが対象
+  // ============================================================
+  const sixGridEntries = useMemo(
+    () => entries.filter(e => e.type === "EXPENSE" && e.costType && e.payMethod),
+    [entries]
+  );
+
+  // 6枠それぞれの合計（① 固定×クレカ 〜 ⑥ 変動×現金）
+  const gridTotals = useMemo(() => {
+    return SIX_GRID_CELLS.map(cell => {
+      const cellEntries = sixGridEntries.filter(
+        e => e.costType === cell.costType && e.payMethod === cell.payMethod
+      );
+      const amount = cellEntries.reduce((s, e) => s + e.amount, 0);
+      return { ...cell, amount, entries: cellEntries };
+    });
+  }, [sixGridEntries]);
+
+  // 固定費合計 / 変動費合計 / 支出合計
+  const sixGridSummary = useMemo(() => {
+    const fixedTotal = sixGridEntries
+      .filter(e => e.costType === "FIXED")
+      .reduce((s, e) => s + e.amount, 0);
+    const variableTotal = sixGridEntries
+      .filter(e => e.costType === "VARIABLE")
+      .reduce((s, e) => s + e.amount, 0);
+    return { fixedTotal, variableTotal, expenseTotal: fixedTotal + variableTotal };
+  }, [sixGridEntries]);
+
+  // 固定費ランキング（削減候補・カテゴリ別 TOP）
+  const fixedRanking = useMemo(() => {
+    const map: Record<string, number> = {};
+    sixGridEntries
+      .filter(e => e.costType === "FIXED")
+      .forEach(e => { map[e.category] = (map[e.category] || 0) + e.amount; });
+    return Object.entries(map)
+      .map(([category, amount]) => ({ category, amount }))
+      .sort((a, b) => b.amount - a.amount);
+  }, [sixGridEntries]);
+
   return {
     year, month, prevMonth, nextMonth,
     entries, plans, templates, loading,
@@ -342,5 +390,7 @@ export function useBudget() {
     getMergedEntries,
     mergedFixedCosts, mergedIncome, mergedSavings, customFixedCategories,
     totals, expenseByCategory, weeklyGroups,
+    // 6枠家計簿
+    sixGridEntries, gridTotals, sixGridSummary, fixedRanking,
   };
 }

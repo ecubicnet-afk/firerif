@@ -8,6 +8,7 @@ import {
   LogOut,
   Menu,
   X,
+  CreditCard,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -16,12 +17,26 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isLoading = status === "loading";
 
+  const openBillingPortal = async () => {
+    try {
+      const res = await fetch("/api/stripe/portal", { method: "POST" });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert(data.error || "お支払いページを開けませんでした");
+      }
+    } catch {
+      alert("お支払いページを開けませんでした");
+    }
+  };
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-14 items-center px-4">
         <Link href={session ? "/dashboard" : "/"} className="flex items-center gap-2 font-bold text-lg">
-          <Flame className="h-6 w-6 text-primary" />
-          <span>ファイアライフ</span>
+          <Flame className="h-6 w-6 text-brand" />
+          <span>ファイアライフBASE</span>
         </Link>
 
         {/* Desktop nav */}
@@ -40,6 +55,14 @@ export function Header() {
                   </Button>
                 </Link>
               )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={openBillingPortal}
+              >
+                <CreditCard className="h-4 w-4 mr-1" />
+                お支払い・解約
+              </Button>
               <Button
                 variant="ghost"
                 size="sm"
@@ -91,6 +114,12 @@ export function Header() {
                   管理画面
                 </Link>
               )}
+              <button
+                className="block px-2 py-1 text-sm w-full text-left"
+                onClick={openBillingPortal}
+              >
+                お支払い・解約
+              </button>
               <button
                 className="block px-2 py-1 text-sm text-destructive"
                 onClick={() => signOut({ callbackUrl: "/" })}
