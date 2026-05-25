@@ -17,7 +17,7 @@ import {
 // ナビ並び順（仕様 C案・活用ガイド4STEP順）
 // 削除対象（Q&A/ToDo/課題提出/節約ジャーナル/ライフプラン/ビジョンボード）はナビから非表示
 // ※ ページ本体やルートは残置（リンクを外すのみ・不可逆な大量削除は避ける）
-const navItems = [
+export const navItems = [
   { href: "/dashboard", label: "ダッシュボード", icon: LayoutDashboard },
   { href: "/guide", label: "活用ガイド", icon: BookMarked },
   { href: "/dream", label: "節約ドリーム", icon: Sparkles },
