@@ -20,8 +20,9 @@ export function useSavings() {
 
   const addEntry = useCallback(
     async (entry: Omit<SavingsEntry, "id">) => {
-      await db.savings.add(entry as SavingsEntry);
+      const id = await db.savings.add(entry as SavingsEntry);
       await refresh();
+      return id as number;
     },
     [refresh]
   );

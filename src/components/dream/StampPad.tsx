@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Check, Settings } from "lucide-react";
@@ -13,17 +13,38 @@ import { CustomInput } from "./CustomInput";
 interface StampPadProps {
   stamps: Stamp[];
   courseId: CourseId;
-  onSave: (entry: Omit<SavingsEntry, "id">) => Promise<void>;
+  onSave: (entry: Omit<SavingsEntry, "id">) => Promise<number>;
+  onDeleteEntry: (id: number) => Promise<void>;
   onEditStamps: () => void;
 }
 
-export function StampPad({ stamps, courseId, onSave, onEditStamps }: StampPadProps) {
+export function StampPad({ stamps, courseId, onSave, onDeleteEntry, onEditStamps }: StampPadProps) {
   const [tappedId, setTappedId] = useState<number | null>(null);
   const [showCustom, setShowCustom] = useState(false);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  // 直前の記録を「取り消す」ためのUndoスナックバー
+  const [toast, setToast] = useState<{ entryId: number; label: string; amount: number; note?: string } | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const course = COURSES_MAP[courseId];
   const mult20 = multiplierForYears(course.annualRate, 10);
+
+  const showUndoToast = useCallback(
+    (entryId: number, label: string, amount: number, note?: string) => {
+      if (toastTimer.current) clearTimeout(toastTimer.current);
+      setToast({ entryId, label, amount, note });
+      toastTimer.current = setTimeout(() => setToast(null), 5000);
+    },
+    []
+  );
+
+  const handleUndo = useCallback(async () => {
+    if (!toast) return;
+    const id = toast.entryId;
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToast(null);
+    if (navigator.vibrate) navigator.vibrate(30);
+    await onDeleteEntry(id);
+  }, [toast, onDeleteEntry]);
 
   const handleStampTap = useCallback(
     async (stamp: Stamp) => {
@@ -31,7 +52,7 @@ export function StampPad({ stamps, courseId, onSave, onEditStamps }: StampPadPro
       setTappedId(stamp.id!);
 
       const now = new Date();
-      await onSave({
+      const newId = await onSave({
         date: now.toISOString().split("T")[0],
         timestamp: Date.now(),
         amount: stamp.amount,
@@ -44,21 +65,18 @@ export function StampPad({ stamps, courseId, onSave, onEditStamps }: StampPadPro
       // Haptic feedback
       if (navigator.vibrate) navigator.vibrate(50);
 
-      // Show reframing toast message
-      if (stamp.notificationMessage) {
-        setToastMessage(stamp.notificationMessage);
-        setTimeout(() => setToastMessage(null), 4000);
-      }
+      // 記録した直後にUndoスナックバー（間違いタップをワンタップで取り消せる）
+      showUndoToast(newId, stamp.label, stamp.amount, stamp.notificationMessage);
 
       setTimeout(() => setTappedId(null), 600);
     },
-    [onSave, tappedId]
+    [onSave, tappedId, showUndoToast]
   );
 
   const handleCustomSave = useCallback(
     async (amount: number, categoryId: string, categoryLabel: string, categoryIcon: string) => {
       const now = new Date();
-      await onSave({
+      const newId = await onSave({
         date: now.toISOString().split("T")[0],
         timestamp: Date.now(),
         amount,
@@ -68,8 +86,9 @@ export function StampPad({ stamps, courseId, onSave, onEditStamps }: StampPadPro
         icon: categoryIcon,
       });
       setShowCustom(false);
+      showUndoToast(newId, categoryLabel, amount);
     },
-    [onSave]
+    [onSave, showUndoToast]
   );
 
   return (
@@ -143,15 +162,30 @@ export function StampPad({ stamps, courseId, onSave, onEditStamps }: StampPadPro
           />
         )}
 
-        {/* Reframing toast message */}
-        {toastMessage && (
-          <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 p-3 rounded-lg bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30 border border-blue-200 dark:border-blue-800">
-            <p className="text-sm text-blue-900 dark:text-blue-100 font-medium">
-              🎁 {toastMessage}
-            </p>
-          </div>
-        )}
       </CardContent>
+
+      {/* 記録直後のUndoスナックバー（画面下部・5秒・どこにスクロールしても見える） */}
+      {toast && (
+        <div className="fixed inset-x-0 bottom-20 md:bottom-6 z-[60] flex justify-center px-4 pointer-events-none">
+          <div className="pointer-events-auto flex items-center gap-3 w-full max-w-sm rounded-xl bg-neutral-900 text-white px-4 py-3 shadow-xl animate-in fade-in slide-in-from-bottom-3 duration-300">
+            <span className="text-lg shrink-0">✅</span>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium truncate">
+                {toast.label} {formatYen(toast.amount)} を記録！
+              </p>
+              {toast.note && (
+                <p className="text-xs text-white/70 truncate">🎁 {toast.note}</p>
+              )}
+            </div>
+            <button
+              onClick={handleUndo}
+              className="shrink-0 rounded-lg px-3 py-2 text-sm font-bold text-amber-400 hover:bg-white/10 active:scale-95 transition"
+            >
+              取り消す
+            </button>
+          </div>
+        </div>
+      )}
     </Card>
   );
 }

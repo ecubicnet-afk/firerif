@@ -83,6 +83,7 @@ export default function DreamPage() {
         stamps={stamps}
         courseId={courseId}
         onSave={addEntry}
+        onDeleteEntry={deleteEntry}
         onEditStamps={() => setStampEditorOpen(true)}
       />
 
