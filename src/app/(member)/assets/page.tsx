@@ -833,6 +833,19 @@ export default function AssetsPage() {
         </div>
       </motion.div>
 
+      {/* はじめての方へ：この画面の使い方 */}
+      <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-4 dark:border-emerald-800 dark:bg-emerald-900/20">
+        <p className="mb-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-400">この画面でできること</p>
+        <p className="text-sm leading-relaxed text-muted-foreground">
+          証券会社（SBI証券・楽天証券）からダウンロードした「保有証券CSV」を取り込むと、<span className="font-medium text-foreground">資産の配分・損益・資産の推移</span>を自動でグラフにします。手入力は不要です。
+        </p>
+        <ol className="mt-2 grid grid-cols-1 gap-1 text-xs text-muted-foreground sm:grid-cols-3">
+          <li>① 証券アプリで保有証券CSVを書き出す</li>
+          <li>② 下の「CSV追加」から取り込む</li>
+          <li>③ 配分・損益・推移が見える📈</li>
+        </ol>
+      </div>
+
       {/* Key Stats — Profit card prominent */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <StatCard

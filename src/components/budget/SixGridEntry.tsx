@@ -72,13 +72,21 @@ export function SixGridEntry({ year, month, gridTotals, onAddEntry, onDeleteEntr
 
   return (
     <div className="space-y-3">
-      <div className="rounded-lg bg-muted/50 p-3 text-sm text-muted-foreground">
-        月末に1回、明細を見ながら6つの枠に振り分けます。
-        <span className="block mt-1">
-          クレカ明細→①②／銀行アプリ→③④／現金レシート→⑤⑥。まずは
-          <span className="font-medium text-blue-600">固定費（①③⑤）</span>
-          から見直すのがコツ。
-        </span>
+      <div className="rounded-lg bg-muted/50 p-3 text-sm space-y-2">
+        <p className="text-muted-foreground">月末に1回、明細を見ながら6つの枠に振り分けるだけ。</p>
+        <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+          <p className="rounded-md bg-blue-50 px-2.5 py-2 leading-relaxed">
+            <span className="font-semibold text-blue-600">固定費</span> ＝ 毎月ほぼ同じ額で出ていくお金
+            <span className="text-muted-foreground">（家賃・通信費・保険・サブスクなど）。一度見直すとずっと効くので、節約はここから💪</span>
+          </p>
+          <p className="rounded-md bg-orange-50 px-2.5 py-2 leading-relaxed">
+            <span className="font-semibold text-orange-600">変動費</span> ＝ 月によって変わるお金
+            <span className="text-muted-foreground">（食費・日用品・娯楽・交際費など）。使いすぎた月に気づける。</span>
+          </p>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          支払い方法で振り分けると楽：クレカ明細→①②／銀行アプリ→③④／現金レシート→⑤⑥
+        </p>
       </div>
 
       <div className="grid gap-3 md:grid-cols-2">

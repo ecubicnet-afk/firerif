@@ -55,11 +55,14 @@ export default function CommunityPage() {
         </CardContent>
       </Card>
 
-      {/* 部活4つ */}
+      {/* 部活3つ */}
       <div>
-        <h2 className="text-sm font-semibold text-muted-foreground mb-3 px-1">
+        <h2 className="text-sm font-semibold text-muted-foreground mb-1 px-1">
           部活（入部自由・掛け持ちOK）
         </h2>
+        <p className="text-xs text-muted-foreground mb-3 px-1 leading-relaxed">
+          部活＝同じ目標の仲間が集まる小グループ。気になるテーマの部に入ると、報告や相談がぐっとしやすくなります。
+        </p>
         <div className="grid grid-cols-2 gap-3">
           {clubs.map((c) => (
             <Card key={c.name}>

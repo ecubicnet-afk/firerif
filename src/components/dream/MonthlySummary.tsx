@@ -24,7 +24,10 @@ export function MonthlySummary({ entries, courseId, label }: MonthlySummaryProps
   return (
     <Card>
       <CardContent className="p-4">
-        <p className="text-sm font-medium text-muted-foreground mb-3">{label}</p>
+        <p className="text-sm font-medium text-muted-foreground mb-1">{label}</p>
+        <p className="text-[11px] text-muted-foreground mb-3 leading-relaxed">
+          「10年後・20年後の価値」＝ 節約したお金を投資で運用したら将来いくらになるかの<span className="font-medium">試算イメージ</span>です（実際の金額を保証するものではありません）。
+        </p>
         <div className="grid grid-cols-3 gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
