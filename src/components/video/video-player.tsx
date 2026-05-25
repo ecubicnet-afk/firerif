@@ -11,6 +11,21 @@ interface VideoPlayerProps {
 export function VideoPlayer({ url, title }: VideoPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
 
+  // 動画URL未設定（準備中）：壊れた黒枠ではなく「近日公開」を出す
+  if (!url || url.trim() === "") {
+    return (
+      <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-gradient-to-br from-neutral-900 to-neutral-800 flex items-center justify-center">
+        <div className="text-center text-white px-6">
+          <div className="text-4xl mb-2">🎬</div>
+          <p className="font-bold text-lg">動画は近日公開</p>
+          <p className="text-sm text-white/70 mt-1 leading-relaxed">
+            {title ? `「${title}」` : "この動画"}は現在準備中です。<br className="hidden sm:block" />公開までもう少しお待ちください🔥
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   // Convert YouTube watch URLs to embed URLs
   let embedUrl = url;
   let videoId: string | null = null;
