@@ -15,6 +15,7 @@ import {
   CreditCard,
   ArrowRight,
 } from "lucide-react";
+import { DashboardSummary } from "@/components/dashboard/DashboardSummary";
 
 // ダッシュボード並び順（仕様 C案・活用ガイド4STEP順）
 // 削除対象（ToDo/課題提出/Q&A/節約ジャーナル/ライフプラン/ビジョンボード）は非表示
@@ -63,6 +64,9 @@ export default function DashboardPage() {
           から。
         </p>
       </div>
+
+      {/* 今月のあなた（節約ドリーム連動・新規は はじめの一歩） */}
+      <DashboardSummary />
 
       {/* Quick links */}
       <div>
