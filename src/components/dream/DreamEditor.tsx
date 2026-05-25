@@ -119,6 +119,7 @@ export function DreamEditor({ dream, onSave, onClose }: DreamEditorProps) {
                 placeholder="例：ハワイ旅行"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
+                className="h-11 text-base"
                 required
               />
             </div>
@@ -129,9 +130,11 @@ export function DreamEditor({ dream, onSave, onClose }: DreamEditorProps) {
               <Input
                 id="dream-amount"
                 type="number"
+                inputMode="numeric"
                 placeholder="例：500000"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
+                className="h-11 text-base"
                 min={1}
                 required
               />
