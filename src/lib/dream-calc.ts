@@ -57,3 +57,20 @@ export function dreamProgress(totalFV: number, targetAmount: number): number {
 export function blurLevel(progress: number): number {
   return Math.max(0, MAX_BLUR * (1 - Math.min(progress, 1)));
 }
+
+/**
+ * 進捗に応じた写真フィルター。
+ * 節約が進むほど「ぼかしが取れて・モノクロ→フルカラーに色づき・明るく鮮やかになる」。
+ * ぼかし単体より変化がドラマチックで、"演出"だと一目で分かる。
+ */
+export function dreamFilter(progress: number): string {
+  const p = Math.min(Math.max(progress, 0), 1);
+  const blur = (MAX_BLUR * (1 - p)).toFixed(1);
+  const gray = (0.85 * (1 - p)).toFixed(2); // 0%:ほぼモノクロ → 100%:フルカラー
+  const bright = (0.72 + 0.28 * p).toFixed(2); // 0%:暗い → 100%:明るい
+  const sat = (0.5 + 0.7 * p).toFixed(2); // 0%:くすむ → 100%:鮮やか
+  return `blur(${blur}px) grayscale(${gray}) brightness(${bright}) saturate(${sat})`;
+}
+
+/** マウント時の初期表示（完全ロック）。ここから現在の進捗まで一気にピントが合う演出に使う。 */
+export const DREAM_FILTER_LOCKED = `blur(${MAX_BLUR}px) grayscale(0.9) brightness(0.55) saturate(0.35)`;

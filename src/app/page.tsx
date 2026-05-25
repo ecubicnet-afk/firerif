@@ -44,7 +44,7 @@ const features = [
   {
     icon: Users,
     title: "Discordコミュニティ",
-    description: "節約・新NISA・高配当・サイドFIRE準備の部活4つ。仲間と続ける。質問・雑談もここでいつでも。",
+    description: "節約・副業・個別株の部活3つ。仲間と続ける。質問・雑談もここでいつでも。",
   },
 ];
 

@@ -99,3 +99,29 @@
   --color-brand: hsl(var(--brand));
   --color-brand-foreground: hsl(var(--brand-foreground));
 }
+
+/* 節約ドリーム：写真に光が走る「現像中」シマー（止まってない＝バグに見えない） */
+@keyframes dream-shimmer {
+  0% { transform: translateX(-130%) skewX(-12deg); opacity: 0; }
+  45% { opacity: 0.5; }
+  100% { transform: translateX(130%) skewX(-12deg); opacity: 0; }
+}
+.dream-shimmer {
+  background: linear-gradient(
+    100deg,
+    transparent 35%,
+    rgba(255, 255, 255, 0.35) 50%,
+    transparent 65%
+  );
+  animation: dream-shimmer 3.4s ease-in-out infinite;
+}
+
+/* 達成時に立ちのぼる火の粉 */
+@keyframes dream-spark {
+  0% { transform: translateY(0) scale(0.6); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translateY(-70px) scale(1.1); opacity: 0; }
+}
+.dream-spark {
+  animation: dream-spark 1.8s ease-out infinite;
+}

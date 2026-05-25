@@ -5,12 +5,11 @@ import { Users, ExternalLink, Sparkles } from "lucide-react";
 const COMMUNITY_BETA_FREE = process.env.COMMUNITY_BETA_FREE === "true";
 const DISCORD_URL = process.env.NEXT_PUBLIC_DISCORD_URL || "#";
 
-// ローンチ時の部活4つ（サービス設計準拠）
+// ローンチ時の部活3つ（2026-05-25確定・まず3つで開始→徐々に増やす）
 const clubs = [
   { emoji: "🏦", name: "節約部", desc: "固定費見直し・家計簿シェア" },
-  { emoji: "📈", name: "新NISA部", desc: "積立報告・暴落時の相談" },
-  { emoji: "💰", name: "高配当部", desc: "配当銘柄の研究" },
-  { emoji: "🔥", name: "サイドFIRE準備部", desc: "必要資産の計算・出口戦略" },
+  { emoji: "💼", name: "副業部", desc: "入金力アップ・副収入づくり" },
+  { emoji: "📈", name: "個別株部", desc: "注目銘柄・ポートフォリオ相談" },
 ];
 
 export default function CommunityPage() {
