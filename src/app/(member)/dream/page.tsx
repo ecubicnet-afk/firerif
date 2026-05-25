@@ -50,6 +50,28 @@ export default function DreamPage() {
         </p>
       </div>
 
+      {/* はじめての方へ：3ステップの使い方 */}
+      <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+        <p className="text-xs font-bold text-primary mb-2">はじめての方へ・使い方</p>
+        <ol className="grid grid-cols-3 gap-2 text-center">
+          <li className="space-y-1">
+            <div className="text-xl">🎯</div>
+            <p className="text-xs font-semibold">①夢を決める</p>
+            <p className="text-[11px] text-muted-foreground leading-tight">叶えたい夢と金額</p>
+          </li>
+          <li className="space-y-1">
+            <div className="text-xl">👆</div>
+            <p className="text-xs font-semibold">②節約をタップ</p>
+            <p className="text-[11px] text-muted-foreground leading-tight">我慢できた日に記録</p>
+          </li>
+          <li className="space-y-1">
+            <div className="text-xl">📈</div>
+            <p className="text-xs font-semibold">③未来が増える</p>
+            <p className="text-[11px] text-muted-foreground leading-tight">投資で10年後いくら？</p>
+          </li>
+        </ol>
+      </div>
+
       <DreamView
         dream={dream}
         entries={entries}

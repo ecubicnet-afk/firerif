@@ -121,7 +121,7 @@ export function DreamView({ dream, entries, courseId, onSaveDream }: DreamViewPr
             </div>
             <div className="h-3 bg-muted rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-primary to-green-400 rounded-full transition-all duration-700 ease-out"
+                className="h-full bg-gradient-to-r from-primary to-amber-400 rounded-full transition-all duration-700 ease-out"
                 style={{ width: `${progressPct}%` }}
               />
             </div>

@@ -20,6 +20,9 @@ export default function BudgetPage() {
     gridTotals, sixGridSummary,
   } = useBudget();
 
+  const filledCells = gridTotals.filter((g) => g.amount > 0).length;
+  const isComplete = filledCells === 6;
+
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto flex items-center justify-center py-20">
@@ -71,6 +74,23 @@ export default function BudgetPage() {
         </CardContent>
       </Card>
 
+      {/* 入力進捗 */}
+      <div className="px-1">
+        <div className="flex items-center justify-between text-xs mb-1.5">
+          <span className="text-muted-foreground">入力した枠</span>
+          <span className="font-bold tabular-nums">{filledCells}/6 枠</span>
+        </div>
+        <div className="h-2 rounded-full bg-muted overflow-hidden">
+          <div
+            className="h-full bg-primary rounded-full transition-all duration-500"
+            style={{ width: `${(filledCells / 6) * 100}%` }}
+          />
+        </div>
+        {isComplete && (
+          <p className="text-xs font-semibold text-primary mt-1.5">🎉 今月の家計簿、完成！下のサマリーで振り返ろう</p>
+        )}
+      </div>
+
       {/* 6-grid input */}
       <SixGridEntry
         year={year}
@@ -83,7 +103,7 @@ export default function BudgetPage() {
       {/* Share summary link */}
       <div className="flex justify-center pt-2">
         <Link href={`/budget/summary?year=${year}&month=${month}`}>
-          <Button variant="outline">
+          <Button variant={isComplete ? "default" : "outline"} size="lg" className="h-12">
             <Share2 className="mr-2 h-4 w-4" />
             月末サマリーを見る（Discord共有用）
           </Button>
