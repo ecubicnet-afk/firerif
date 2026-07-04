@@ -24,7 +24,7 @@ const features = [
   {
     icon: Radio,
     title: "月2回のライブ",
-    description: "月初「守りのマネー診断会」(家計簿をみんなでつける)＋月中「攻めのマネー戦略会」(投資相談・ポート)。Zoomで参加。",
+    description: "月初「守りのマネー診断会」(家計簿をみんなでつける)＋月中「攻めのマネー戦略会」(新NISA・iDeCoなど制度の学び)。Zoomで参加。",
   },
   {
     icon: Wallet,
@@ -38,13 +38,13 @@ const features = [
   },
   {
     icon: TrendingUp,
-    title: "資産管理（ファイアライフ流ポート）",
-    description: "FANG+/日経225/S&P500/オルカン/個別株を各20%。攻めの受け皿を「資産管理」で見える化。",
+    title: "資産管理（見える化ツール）",
+    description: "保有資産をCSVで取り込むだけで、自分のポートフォリオをグラフで見える化。攻めの現在地がひと目でわかる。",
   },
   {
     icon: Users,
     title: "Discordコミュニティ",
-    description: "節約・副業・個別株の部活3つ。仲間と続ける。質問・雑談もここでいつでも。",
+    description: "節約・副業・お金の勉強の部活3つ。仲間と続ける。質問・雑談もここでいつでも。",
   },
 ];
 
@@ -53,12 +53,12 @@ const roadmap = [
   { step: "STEP 1", title: "目的を決める", desc: "「節約ドリーム」で、なぜFIREを目指すか・何を叶えたいかを言語化。" },
   { step: "STEP 2", title: "仲間に挨拶", desc: "Discordで自己紹介。宣言すると続けやすくなる（コミットメント効果）。" },
   { step: "STEP 3", title: "守りを固める", desc: "節約コーチング＋6枠家計簿で支出を見える化。守りのマネー診断会で後押し。" },
-  { step: "STEP 4", title: "攻めも並行", desc: "ファイアライフ流ポートで増やす。攻めのマネー戦略会で相談しながら。" },
+  { step: "STEP 4", title: "攻めも並行", desc: "資産管理で自分のポートを見える化。攻めのマネー戦略会で制度を学びながら。" },
 ];
 
 const benefits = [
   "最強の節約コーチング 全10回（初心者でも迷わない）",
-  "月2回のライブ（守り＝家計診断／攻め＝投資相談）",
+  "月2回のライブ（守り＝家計診断／攻め＝制度の学び）",
   "6枠家計簿＋資産管理ツールが使い放題",
   "Discordで仲間と続ける（質問もここ）",
   "活用ガイド4STEPで「何から始めるか」が明確",
@@ -85,11 +85,11 @@ export default function LandingPage() {
             それが私たちが提唱する『with FIRE（ウィズファイア）』です。
           </p>
           <div className="flex gap-4 justify-center">
-            <Link href="/register">
+            <a href="https://firelife-community.netlify.app/join/" target="_blank" rel="noopener noreferrer">
               <Button size="lg" className="text-lg px-8">
-                今すぐ参加する
+                入会のご案内を見る
               </Button>
-            </Link>
+            </a>
             <Link href="#features">
               <Button variant="outline" size="lg" className="text-lg px-8">
                 詳しく見る
@@ -168,13 +168,13 @@ export default function LandingPage() {
                     </li>
                   ))}
                 </ul>
-                <Link href="/register">
+                <a href="https://firelife-community.netlify.app/join/" target="_blank" rel="noopener noreferrer">
                   <Button size="lg" className="w-full text-lg">
-                    今すぐ参加する
+                    入会のご案内を見る
                   </Button>
-                </Link>
+                </a>
                 <p className="text-xs text-muted-foreground mt-4">
-                  いつでもキャンセル可能です
+                  入会（決済）はMOSHで行います / 解約はいつでも可能です
                 </p>
               </CardContent>
             </Card>

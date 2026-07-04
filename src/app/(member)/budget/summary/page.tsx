@@ -104,6 +104,16 @@ function BudgetSummaryContent() {
     [sixGrid]
   );
 
+  // 財布別（クレカ/口座/現金）の小計
+  const walletTotals = useMemo(
+    () => ({
+      CARD: sixGrid.filter((e) => e.payMethod === "CARD").reduce((s, e) => s + e.amount, 0),
+      BANK: sixGrid.filter((e) => e.payMethod === "BANK").reduce((s, e) => s + e.amount, 0),
+      CASH: sixGrid.filter((e) => e.payMethod === "CASH").reduce((s, e) => s + e.amount, 0),
+    }),
+    [sixGrid]
+  );
+
   // 固定費ランキング TOP3
   const fixedRanking = useMemo(() => {
     const map: Record<string, number> = {};
@@ -166,6 +176,25 @@ function BudgetSummaryContent() {
             <div className="rounded-lg bg-muted py-3">
               <p className="text-xs text-muted-foreground">支出合計</p>
               <p className="text-lg font-bold tabular-nums">{yen(total)}</p>
+            </div>
+          </div>
+
+          {/* 財布別の内訳 */}
+          <div>
+            <h3 className="mb-2 text-sm font-semibold">財布別の内訳（どの財布で使ったか）</h3>
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <div className="rounded-lg bg-muted/50 py-3">
+                <p className="text-xs text-muted-foreground">💳 クレカ</p>
+                <p className="text-base font-bold tabular-nums">{yen(walletTotals.CARD)}</p>
+              </div>
+              <div className="rounded-lg bg-muted/50 py-3">
+                <p className="text-xs text-muted-foreground">🏦 口座</p>
+                <p className="text-base font-bold tabular-nums">{yen(walletTotals.BANK)}</p>
+              </div>
+              <div className="rounded-lg bg-muted/50 py-3">
+                <p className="text-xs text-muted-foreground">💵 現金</p>
+                <p className="text-base font-bold tabular-nums">{yen(walletTotals.CASH)}</p>
+              </div>
             </div>
           </div>
 

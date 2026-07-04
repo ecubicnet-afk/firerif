@@ -9,7 +9,7 @@ const DISCORD_URL = process.env.NEXT_PUBLIC_DISCORD_URL || "#";
 const clubs = [
   { emoji: "🏦", name: "節約部", desc: "固定費見直し・家計簿シェア" },
   { emoji: "💼", name: "副業部", desc: "入金力アップ・副収入づくり" },
-  { emoji: "📈", name: "個別株部", desc: "注目銘柄・ポートフォリオ相談" },
+  { emoji: "📈", name: "お金の勉強部", desc: "新NISA・iDeCoなど制度を学び合う" },
 ];
 
 export default function CommunityPage() {
@@ -42,8 +42,9 @@ export default function CommunityPage() {
           <div>
             <p className="font-bold text-lg">Discordに参加しよう</p>
             <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
-              一人だと続かない節約・投資も、仲間がいれば続きます。
+              一人だと続かないお金の習慣も、仲間がいれば続きます。
               まずは自己紹介から。困ったとき・雑談・質問もぜんぶここでOK。
+              つよびの「お金のニュース解説」も Discord に届きます（不定期配信）。
             </p>
           </div>
           <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer">

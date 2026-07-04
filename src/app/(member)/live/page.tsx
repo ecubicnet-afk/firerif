@@ -38,7 +38,7 @@ export default async function LivePage() {
       <div>
         <h1 className="text-xl md:text-2xl font-bold">ライブ配信</h1>
         <p className="text-muted-foreground mt-1 text-sm leading-relaxed">
-          月2回。月初「守りのマネー診断会」（みんなで家計簿）＋月中「攻めのマネー戦略会」（投資相談・ポート）。Zoom参加・録画あり。
+          月2回。月初「守りのマネー診断会」（みんなで家計簿）＋月中「攻めのマネー戦略会」（新NISA・iDeCoなど制度の学び）。Zoom参加・録画あり。
         </p>
       </div>
 

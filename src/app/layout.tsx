@@ -4,11 +4,11 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "ファイアライフ コミュニティ",
-    template: "%s | ファイアライフ",
+    default: "ファイアライフBASE｜ファイアライフコミュニティ会員アプリ",
+    template: "%s | ファイアライフBASE",
   },
   description:
-    "経済的自立と早期リタイアを目指すコミュニティ。投資・節約・資産管理を学ぼう。",
+    "節約×お金の知識×仲間で、自分のwith FIREを作っていく。ファイアライフコミュニティの会員アプリです。",
 };
 
 export default function RootLayout({

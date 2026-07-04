@@ -29,26 +29,14 @@ const quickLinks = [
   { href: "/assets", label: "資産管理", desc: "ポートフォリオ", icon: TrendingUp },
 ];
 
-// お支払い・解約ポータル（外部）。未設定時は Stripe カスタマーポータルにフォールバック
-const BILLING_PORTAL_URL = process.env.NEXT_PUBLIC_BILLING_PORTAL_URL || "";
+// お支払い・解約はMOSHのマイページから（2026-06-07 Stripe閉鎖につきフォールバック撤去）
+const BILLING_PORTAL_URL = process.env.NEXT_PUBLIC_BILLING_PORTAL_URL || "https://mosh.jp/";
 
 export default function DashboardPage() {
   const { data: session } = useSession();
 
-  async function handleManageBilling() {
-    if (BILLING_PORTAL_URL) {
-      window.open(BILLING_PORTAL_URL, "_blank", "noopener,noreferrer");
-      return;
-    }
-    try {
-      const res = await fetch("/api/stripe/portal", { method: "POST" });
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      }
-    } catch {
-      alert("エラーが発生しました");
-    }
+  function handleManageBilling() {
+    window.open(BILLING_PORTAL_URL, "_blank", "noopener,noreferrer");
   }
 
   return (
@@ -112,7 +100,7 @@ export default function DashboardPage() {
             お支払い・解約
           </CardTitle>
           <CardDescription>
-            お支払い方法の変更や解約は、外部の安全なポータルで行えます。
+            お支払い方法の変更や解約は、MOSH（決済サービス）のマイページから行えます。
           </CardDescription>
         </CardHeader>
         <CardContent>

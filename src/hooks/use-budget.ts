@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { getExpenseGroup, FIXED_COST_CATEGORIES, INCOME_CATEGORIES, SAVING_CATEGORIES, SIX_GRID_CELLS } from "@/lib/budget-categories";
 import type { ExpenseGroup, CostType, PayMethod } from "@/lib/budget-categories";
+import type { TrendPoint } from "@/components/budget/BudgetTrend";
 
 export interface BudgetEntry {
   id: string;
@@ -64,6 +65,7 @@ export function useBudget() {
   const [entries, setEntries] = useState<BudgetEntry[]>([]);
   const [plans, setPlans] = useState<BudgetPlan[]>([]);
   const [templates, setTemplates] = useState<BudgetTemplate[]>([]);
+  const [trend, setTrend] = useState<TrendPoint[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchEntries = useCallback(async () => {
@@ -84,10 +86,28 @@ export function useBudget() {
     setTemplates(Array.isArray(data) ? data : []);
   }, []);
 
+  const fetchTrend = useCallback(async () => {
+    const res = await fetch(`/api/budget/trend?months=6&year=${year}&month=${month}`);
+    const data = await res.json();
+    setTrend(Array.isArray(data) ? data : []);
+  }, [year, month]);
+
+  // 先月の固定費エントリ（毎月コピー用のコピー元）を取得
+  const fetchPrevMonthFixed = useCallback(async (): Promise<BudgetEntry[]> => {
+    let py = year;
+    let pm = month - 1;
+    if (pm === 0) { pm = 12; py -= 1; }
+    const res = await fetch(`/api/budget?year=${py}&month=${pm}`);
+    const data = await res.json();
+    return (Array.isArray(data) ? data : []).filter(
+      (e: BudgetEntry) => e.type === "EXPENSE" && e.costType === "FIXED" && !!e.payMethod
+    );
+  }, [year, month]);
+
   useEffect(() => {
     setLoading(true);
-    Promise.all([fetchEntries(), fetchPlans(), fetchTemplates()]).finally(() => setLoading(false));
-  }, [fetchEntries, fetchPlans, fetchTemplates]);
+    Promise.all([fetchEntries(), fetchPlans(), fetchTemplates(), fetchTrend()]).finally(() => setLoading(false));
+  }, [fetchEntries, fetchPlans, fetchTemplates, fetchTrend]);
 
   function prevMonth() {
     if (month === 1) { setYear(year - 1); setMonth(12); }
@@ -106,17 +126,65 @@ export function useBudget() {
     costType?: CostType | null; payMethod?: PayMethod | null;
     memo?: string; imageData?: string | null;
   }) {
-    await fetch("/api/budget", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    await fetchEntries();
+    // 楽観的更新：サーバー応答を待たず即UIに反映（体感ゼロ遅延）
+    const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const optimistic: BudgetEntry = {
+      id: tempId,
+      year: data.year, month: data.month, day: data.day,
+      category: data.category, amount: data.amount, type: data.type,
+      costType: data.costType ?? null, payMethod: data.payMethod ?? null,
+      memo: data.memo ?? null, imageData: data.imageData ?? null,
+      createdAt: new Date().toISOString(),
+    };
+    setEntries((prev) => [optimistic, ...prev]);
+    try {
+      const res = await fetch("/api/budget", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      const saved = await res.json();
+      if (saved?.id) {
+        setEntries((prev) => prev.map((e) => (e.id === tempId ? { ...optimistic, ...saved } : e)));
+      }
+    } catch {
+      setEntries((prev) => prev.filter((e) => e.id !== tempId)); // 失敗→ロールバック
+    }
   }
 
   async function deleteEntry(id: string) {
-    await fetch(`/api/budget/${id}`, { method: "DELETE" });
-    await fetchEntries();
+    // 楽観的更新：即UIから消す
+    const backup = entries;
+    setEntries((prev) => prev.filter((e) => e.id !== id));
+    try {
+      await fetch(`/api/budget/${id}`, { method: "DELETE" });
+    } catch {
+      setEntries(backup); // 失敗→戻す
+    }
+  }
+
+  async function updateEntry(id: string, patch: { category?: string; amount?: number }) {
+    const target = entries.find((e) => e.id === id);
+    if (!target) return;
+    const updated = { ...target, ...patch };
+    // 楽観的更新：即UIに反映
+    setEntries((prev) => prev.map((e) => (e.id === id ? updated : e)));
+    try {
+      await fetch(`/api/budget/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          category: updated.category,
+          amount: updated.amount,
+          type: updated.type,
+          costType: updated.costType,
+          payMethod: updated.payMethod,
+          memo: updated.memo,
+        }),
+      });
+    } catch {
+      setEntries((prev) => prev.map((e) => (e.id === id ? target : e))); // ロールバック
+    }
   }
 
   async function addPlan(data: {
@@ -381,16 +449,30 @@ export function useBudget() {
       .sort((a, b) => b.amount - a.amount);
   }, [sixGridEntries]);
 
+  // 前月比（6マス支出合計の差分・マイナス=減った）
+  const monthOverMonth = useMemo(() => {
+    if (trend.length < 2) return null;
+    const prev = trend[trend.length - 2];
+    // 当月はローカル即時集計(sixGridSummary)を使う＝追加のたびに前月比も即更新・trend再取得不要
+    return {
+      prevTotal: prev.expenseTotal,
+      diff: sixGridSummary.expenseTotal - prev.expenseTotal,
+      prevFixed: prev.fixedTotal,
+      fixedDiff: sixGridSummary.fixedTotal - prev.fixedTotal,
+    };
+  }, [trend, sixGridSummary.expenseTotal, sixGridSummary.fixedTotal]);
+
   return {
     year, month, prevMonth, nextMonth,
     entries, plans, templates, loading,
-    addEntry, deleteEntry, addPlan, deletePlan,
+    addEntry, deleteEntry, updateEntry, addPlan, deletePlan,
     addTemplate, deleteTemplate,
-    fetchEntries, fetchPlans, fetchTemplates,
+    fetchEntries, fetchPlans, fetchTemplates, fetchTrend, fetchPrevMonthFixed,
     getMergedEntries,
     mergedFixedCosts, mergedIncome, mergedSavings, customFixedCategories,
     totals, expenseByCategory, weeklyGroups,
     // 6枠家計簿
     sixGridEntries, gridTotals, sixGridSummary, fixedRanking,
+    trend, monthOverMonth,
   };
 }

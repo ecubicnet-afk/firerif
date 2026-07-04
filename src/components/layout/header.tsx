@@ -18,18 +18,10 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isLoading = status === "loading";
 
-  const openBillingPortal = async () => {
-    try {
-      const res = await fetch("/api/stripe/portal", { method: "POST" });
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        alert(data.error || "お支払いページを開けませんでした");
-      }
-    } catch {
-      alert("お支払いページを開けませんでした");
-    }
+  // お支払い・解約はMOSHのマイページから（2026-06-07 Stripe閉鎖につきフォールバック撤去）
+  const openBillingPortal = () => {
+    const url = process.env.NEXT_PUBLIC_BILLING_PORTAL_URL || "https://mosh.jp/";
+    window.open(url, "_blank", "noopener,noreferrer");
   };
 
   return (
