@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { VideoPlayer } from "@/components/video/video-player";
+import { Markdown } from "@/components/markdown";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight } from "lucide-react";
@@ -58,6 +59,12 @@ export default async function EpisodePage({
       {episode.description && (
         <div className="prose prose-sm max-w-none">
           <p className="text-muted-foreground">{episode.description}</p>
+        </div>
+      )}
+
+      {episode.body && (
+        <div className="border-t pt-6">
+          <Markdown>{episode.body}</Markdown>
         </div>
       )}
 

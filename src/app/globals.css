@@ -125,3 +125,33 @@
 .dream-spark {
   animation: dream-spark 1.8s ease-out infinite;
 }
+
+/* 講座動画ページ：管理者が書いた補足・FAQ・リンク（Markdown描画） */
+.md-body { font-size: 0.95rem; line-height: 1.75; color: hsl(var(--foreground)); }
+.md-body > :first-child { margin-top: 0; }
+.md-body h2 {
+  font-size: 1.15rem; line-height: 1.5; font-weight: 700;
+  margin: 1.75rem 0 0.75rem; padding-left: 0.6rem;
+  border-left: 4px solid hsl(var(--primary));
+}
+.md-body h3 { font-size: 1.02rem; font-weight: 700; margin: 1.25rem 0 0.5rem; }
+.md-body p { margin: 0.65rem 0; }
+.md-body ul, .md-body ol { margin: 0.65rem 0; padding-left: 1.35rem; }
+.md-body li { margin: 0.3rem 0; }
+.md-body ul { list-style: disc; }
+.md-body ol { list-style: decimal; }
+.md-body a { color: hsl(var(--primary)); text-decoration: underline; text-underline-offset: 2px; word-break: break-word; }
+.md-body strong { font-weight: 700; }
+.md-body hr { border: 0; border-top: 1px solid hsl(var(--border)); margin: 1.5rem 0; }
+.md-body blockquote {
+  margin: 1rem 0; padding: 0.5rem 0.9rem;
+  border-left: 3px solid hsl(var(--border)); color: hsl(var(--muted-foreground));
+  background: hsl(var(--muted)); border-radius: 0.4rem;
+}
+.md-body code {
+  font-size: 0.85em; padding: 0.1rem 0.35rem; border-radius: 0.3rem;
+  background: hsl(var(--muted));
+}
+.md-body table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; display: block; overflow-x: auto; }
+.md-body th, .md-body td { border: 1px solid hsl(var(--border)); padding: 0.45rem 0.6rem; text-align: left; }
+.md-body th { background: hsl(var(--muted)); font-weight: 700; }

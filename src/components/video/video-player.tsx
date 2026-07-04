@@ -10,6 +10,7 @@ interface VideoPlayerProps {
 
 export function VideoPlayer({ url, title }: VideoPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
+  const handlePlay = useCallback(() => setIsPlaying(true), []);
 
   // 動画URL未設定（準備中）：壊れた黒枠ではなく「近日公開」を出す
   if (!url || url.trim() === "") {
@@ -26,6 +27,26 @@ export function VideoPlayer({ url, title }: VideoPlayerProps) {
     );
   }
 
+  // Cloudflare Stream：会員限定の講座動画ホスティング。
+  // 管理者が貼るURLの形が /iframe・/watch・末尾が動画IDのどれでも埋め込みに正規化する。
+  const cfMatch = url.match(
+    /(https:\/\/customer-[\w-]+\.cloudflarestream\.com\/[\w-]+)(?:\/(?:iframe|watch))?/
+  );
+  if (cfMatch) {
+    return (
+      <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-black">
+        <iframe
+          src={`${cfMatch[1]}/iframe`}
+          title={title || "動画プレーヤー"}
+          className="absolute inset-0 w-full h-full"
+          allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
+          allowFullScreen
+          loading="lazy"
+        />
+      </div>
+    );
+  }
+
   // Convert YouTube watch URLs to embed URLs
   let embedUrl = url;
   let videoId: string | null = null;
@@ -36,8 +57,6 @@ export function VideoPlayer({ url, title }: VideoPlayerProps) {
     videoId = youtubeMatch[1];
     embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
   }
-
-  const handlePlay = useCallback(() => setIsPlaying(true), []);
 
   // Show thumbnail for YouTube videos until clicked
   if (videoId && !isPlaying) {

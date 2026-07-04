@@ -9,13 +9,23 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Video } from "lucide-react";
 
+interface Episode {
+  id: string;
+  title: string;
+  sortOrder: number;
+  duration?: number | null;
+  description?: string | null;
+  body?: string | null;
+  videoUrl?: string;
+}
+
 interface Course {
   id: string;
   slug: string;
   title: string;
   description: string | null;
   sortOrder: number;
-  episodes: { id: string; title: string; sortOrder: number; duration?: number | null }[];
+  episodes: Episode[];
 }
 
 export default function AdminCoursesPage() {
@@ -29,10 +39,18 @@ export default function AdminCoursesPage() {
   const [courseTitle, setCourseTitle] = useState("");
   const [courseDescription, setCourseDescription] = useState("");
 
-  // Episode form
+  // Episode form (create)
   const [episodeTitle, setEpisodeTitle] = useState("");
   const [episodeVideoUrl, setEpisodeVideoUrl] = useState("");
   const [episodeDescription, setEpisodeDescription] = useState("");
+  const [episodeBody, setEpisodeBody] = useState("");
+
+  // Episode edit
+  const [editingEpisodeId, setEditingEpisodeId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editVideoUrl, setEditVideoUrl] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editBody, setEditBody] = useState("");
 
   const fetchCourses = useCallback(async () => {
     const res = await fetch("/api/admin/courses");
@@ -82,15 +100,50 @@ export default function AdminCoursesPage() {
           title: episodeTitle,
           videoUrl: episodeVideoUrl,
           description: episodeDescription || null,
+          body: episodeBody || null,
         }),
       });
       setEpisodeTitle("");
       setEpisodeVideoUrl("");
       setEpisodeDescription("");
+      setEpisodeBody("");
       setShowEpisodeForm(null);
       fetchCourses();
     } catch {
       alert("作成に失敗しました");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function startEditEpisode(ep: Episode) {
+    setEditingEpisodeId(ep.id);
+    setEditTitle(ep.title);
+    setEditVideoUrl(ep.videoUrl || "");
+    setEditDescription(ep.description || "");
+    setEditBody(ep.body || "");
+  }
+
+  async function handleUpdateEpisode(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editingEpisodeId) return;
+    setLoading(true);
+    try {
+      await fetch("/api/admin/episodes", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: editingEpisodeId,
+          title: editTitle,
+          videoUrl: editVideoUrl,
+          description: editDescription || null,
+          body: editBody || null,
+        }),
+      });
+      setEditingEpisodeId(null);
+      fetchCourses();
+    } catch {
+      alert("更新に失敗しました");
     } finally {
       setLoading(false);
     }
@@ -230,11 +283,23 @@ export default function AdminCoursesPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>説明</Label>
+                  <Label>説明（一覧・動画上に出る短い概要）</Label>
                   <Textarea
                     value={episodeDescription}
                     onChange={(e) => setEpisodeDescription(e.target.value)}
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label>補足・よくある質問・リンク（動画の下に表示・Markdown可）</Label>
+                  <Textarea
+                    rows={8}
+                    placeholder={"## この動画で使った資料\n- [家計簿テンプレDL](https://...)\n\n## よくある質問\n**Q. iDeCoとNISAどっちが先？**\nA. まずは...\n"}
+                    value={episodeBody}
+                    onChange={(e) => setEpisodeBody(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    見出しは <code>## タイトル</code>、リンクは <code>[表示文字](URL)</code>、箇条書きは <code>- 項目</code> で書けます。
+                  </p>
                 </div>
                 <div className="flex gap-2">
                   <Button type="submit" disabled={loading}>追加</Button>
@@ -245,14 +310,75 @@ export default function AdminCoursesPage() {
               </form>
             )}
             {course.episodes.map((ep, i) => (
-              <div
-                key={ep.id}
-                className="flex items-center gap-3 p-2 rounded hover:bg-muted/50"
-              >
-                <span className="text-sm text-muted-foreground w-8">
-                  #{i + 1}
-                </span>
-                <span className="text-sm">{ep.title}</span>
+              <div key={ep.id}>
+                {editingEpisodeId === ep.id ? (
+                  <form
+                    onSubmit={handleUpdateEpisode}
+                    className="space-y-4 border rounded-lg p-4 mb-2"
+                  >
+                    <div className="space-y-2">
+                      <Label>エピソードタイトル</Label>
+                      <Input
+                        value={editTitle}
+                        onChange={(e) => setEditTitle(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>動画URL</Label>
+                      <Input
+                        value={editVideoUrl}
+                        onChange={(e) => setEditVideoUrl(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>説明（一覧・動画上に出る短い概要）</Label>
+                      <Textarea
+                        value={editDescription}
+                        onChange={(e) => setEditDescription(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>補足・よくある質問・リンク（動画の下に表示・Markdown可）</Label>
+                      <Textarea
+                        rows={8}
+                        placeholder={"## この動画で使った資料\n- [家計簿テンプレDL](https://...)\n\n## よくある質問\n**Q. iDeCoとNISAどっちが先？**\nA. まずは...\n"}
+                        value={editBody}
+                        onChange={(e) => setEditBody(e.target.value)}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        見出しは <code>## タイトル</code>、リンクは <code>[表示文字](URL)</code>、箇条書きは <code>- 項目</code> で書けます。
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button type="submit" disabled={loading}>保存</Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setEditingEpisodeId(null)}
+                      >
+                        キャンセル
+                      </Button>
+                    </div>
+                  </form>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => startEditEpisode(ep)}
+                    className="flex items-center gap-3 p-2 rounded hover:bg-muted/50 w-full text-left"
+                  >
+                    <span className="text-sm text-muted-foreground w-8">
+                      #{i + 1}
+                    </span>
+                    <span className="text-sm">{ep.title}</span>
+                    {ep.body && (
+                      <Badge variant="secondary" className="ml-auto text-xs">
+                        補足あり
+                      </Badge>
+                    )}
+                  </button>
+                )}
               </div>
             ))}
             {course.episodes.length === 0 && (
