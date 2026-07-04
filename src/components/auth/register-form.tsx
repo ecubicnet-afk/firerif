@@ -67,23 +67,9 @@ export function RegisterForm() {
         return;
       }
 
-      if (isBetaFree) {
-        // Beta free: skip checkout, go directly to dashboard
-        router.push("/dashboard");
-      } else {
-        // Redirect to checkout
-        const checkoutRes = await fetch("/api/stripe/checkout", {
-          method: "POST",
-        });
-
-        const checkoutData = await checkoutRes.json();
-
-        if (checkoutData.url) {
-          window.location.href = checkoutData.url;
-        } else {
-          router.push("/dashboard");
-        }
-      }
+      // 2026-06-07: 入会（決済）はMOSHで完結する設計に変更。
+      // アプリの登録＝アカウント作成のみ（Stripe Checkout呼び出しは廃止・Stripeは閉鎖済み）
+      router.push("/dashboard");
     } catch {
       setError("登録中にエラーが発生しました");
     } finally {
@@ -91,28 +77,22 @@ export function RegisterForm() {
     }
   }
 
-  async function handleResubscribe() {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/stripe/checkout", { method: "POST" });
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      }
-    } catch {
-      setError("エラーが発生しました");
-    } finally {
-      setLoading(false);
-    }
+  // 2026-06-07: 再開もMOSHで行う（Stripe Checkoutは廃止）
+  function handleResubscribe() {
+    window.open(
+      "https://mosh.jp/services/9c512b4b247841dbbe31d2b863cae2de",
+      "_blank",
+      "noopener,noreferrer"
+    );
   }
 
   if (isResubscribe) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">サブスクリプションの再開</CardTitle>
+          <CardTitle className="text-2xl">アクセスの有効化について</CardTitle>
           <CardDescription>
-            会員エリアにアクセスするには、サブスクリプションを再開してください。
+            このアカウントはまだ有効化されていません。MOSHでご入会済みの方は、運営が確認のうえ1〜2日以内に有効化します（MOSHと同じメールアドレスでのご登録をお願いします）。まだの方は下から入会できます。
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -128,7 +108,7 @@ export function RegisterForm() {
             onClick={handleResubscribe}
             disabled={loading}
           >
-            {loading ? "処理中..." : "サブスクリプションを再開する"}
+            {loading ? "処理中..." : "ファイアライフコミュニティに入会する（MOSH）"}
           </Button>
           {isBetaFree && (
             <Link href="/dashboard" className="w-full">
@@ -177,6 +157,11 @@ export function RegisterForm() {
               onChange={(e) => setEmail(e.target.value)}
               required
             />
+            {!isBetaFree && (
+              <p className="rounded-md bg-blue-50 p-2 text-xs text-blue-800">
+                ※ MOSHでご入会の際に使ったメールアドレスでご登録ください（照合のため）
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">パスワード</Label>
@@ -203,8 +188,13 @@ export function RegisterForm() {
         </CardContent>
         <CardFooter className="flex flex-col gap-4">
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "登録中..." : isBetaFree ? "無料で登録する" : "登録して決済へ進む"}
+            {loading ? "登録中..." : isBetaFree ? "無料で登録する" : "登録する"}
           </Button>
+          {!isBetaFree && (
+            <p className="text-xs text-muted-foreground text-center">
+              ご登録後、運営がMOSHでのお支払いを確認し、1〜2日以内にアクセスを有効化します。
+            </p>
+          )}
           <p className="text-sm text-muted-foreground text-center">
             既にアカウントをお持ちの方は{" "}
             <Link href="/login" className="text-primary hover:underline">

@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Search,
@@ -71,9 +73,46 @@ const FEATURES = [
 type SortOption = "createdAt" | "name" | "status";
 
 export function MemberList({ members }: Props) {
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sort, setSort] = useState<SortOption>("createdAt");
+  const [pendingId, setPendingId] = useState<string | null>(null);
+
+  // 有料(ACTIVE) ↔ 無料(INACTIVE) を運営が切り替える
+  async function toggleAccess(member: AdminMember) {
+    const isActive = (member.subscription?.status ?? "INACTIVE") === "ACTIVE";
+    const newStatus = isActive ? "INACTIVE" : "ACTIVE";
+
+    // 無料化（締め出し）は誤操作防止に確認
+    if (
+      newStatus === "INACTIVE" &&
+      !window.confirm(
+        `${member.name || member.email} さんを「無料」（アクセス無効）にしますか？\n※データは残るので、再度「有料」にすればすぐ戻せます。`
+      )
+    ) {
+      return;
+    }
+
+    setPendingId(member.id);
+    try {
+      const res = await fetch("/api/admin/members", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: member.id, status: newStatus }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        window.alert(data.error || "更新に失敗しました");
+      } else {
+        router.refresh();
+      }
+    } catch {
+      window.alert("更新に失敗しました");
+    } finally {
+      setPendingId(null);
+    }
+  }
 
   const filtered = useMemo(() => {
     let result = members;
@@ -214,11 +253,27 @@ export function MemberList({ members }: Props) {
                     </div>
                   )}
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  {member.role === "ADMIN" && <Badge>管理者</Badge>}
-                  <Badge variant={statusColors[status]}>
-                    {STATUS_LABELS[status] || status}
-                  </Badge>
+                <div className="flex flex-col items-end gap-2 shrink-0">
+                  <div className="flex items-center gap-2">
+                    {member.role === "ADMIN" && <Badge>管理者</Badge>}
+                    <Badge variant={statusColors[status]}>
+                      {status === "ACTIVE" ? "有料" : STATUS_LABELS[status] || status}
+                    </Badge>
+                  </div>
+                  {member.role !== "ADMIN" && (
+                    <Button
+                      size="sm"
+                      variant={status === "ACTIVE" ? "outline" : "default"}
+                      disabled={pendingId === member.id}
+                      onClick={() => toggleAccess(member)}
+                    >
+                      {pendingId === member.id
+                        ? "更新中..."
+                        : status === "ACTIVE"
+                        ? "無料にする"
+                        : "有料にする"}
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
