@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { PREPARING, LINE_URL } from "@/lib/launch";
 import {
   Flame,
   Video,
@@ -24,7 +25,7 @@ const features = [
   {
     icon: Radio,
     title: "月2回のライブ",
-    description: "月初「守りのマネー診断会」(家計簿をみんなでつける)＋月中「攻めのマネー戦略会」(投資相談・ポート)。Zoomで参加。",
+    description: "月初「守りのマネー診断会」(家計簿をみんなでつける)＋月中「攻めのマネー戦略会」(投資の知識をみんなで学ぶ)。Zoomで参加。",
   },
   {
     icon: Wallet,
@@ -38,13 +39,13 @@ const features = [
   },
   {
     icon: TrendingUp,
-    title: "資産管理（ファイアライフ流ポート）",
-    description: "FANG+/日経225/S&P500/オルカン/個別株を各20%。攻めの受け皿を「資産管理」で見える化。",
+    title: "資産管理ツール",
+    description: "自分の資産とポートフォリオを1画面で見える化。増えていく過程を記録して、続けるモチベーションに変える。",
   },
   {
     icon: Users,
     title: "Discordコミュニティ",
-    description: "節約・副業・個別株の部活3つ。仲間と続ける。質問・雑談もここでいつでも。",
+    description: "節約・副業・お金の勉強の部活3つ。仲間と続ける。質問・雑談もここでいつでも。",
   },
 ];
 
@@ -53,12 +54,12 @@ const roadmap = [
   { step: "STEP 1", title: "目的を決める", desc: "「節約ドリーム」で、なぜFIREを目指すか・何を叶えたいかを言語化。" },
   { step: "STEP 2", title: "仲間に挨拶", desc: "Discordで自己紹介。宣言すると続けやすくなる（コミットメント効果）。" },
   { step: "STEP 3", title: "守りを固める", desc: "節約コーチング＋6枠家計簿で支出を見える化。守りのマネー診断会で後押し。" },
-  { step: "STEP 4", title: "攻めも並行", desc: "ファイアライフ流ポートで増やす。攻めのマネー戦略会で相談しながら。" },
+  { step: "STEP 4", title: "攻めも並行", desc: "資産管理ツールで増える過程を見える化。攻めのマネー戦略会で学びながら。" },
 ];
 
 const benefits = [
   "最強の節約コーチング 全10回（初心者でも迷わない）",
-  "月2回のライブ（守り＝家計診断／攻め＝投資相談）",
+  "月2回のライブ（守り＝家計診断／攻め＝投資の学び）",
   "6枠家計簿＋資産管理ツールが使い放題",
   "Discordで仲間と続ける（質問もここ）",
   "活用ガイド4STEPで「何から始めるか」が明確",
@@ -84,12 +85,25 @@ export default function LandingPage() {
             資産収入で『お金と時間』に余裕を。仕事に縛られすぎず、家族や趣味も大切に。今を豊かに、老後も安心。
             それが私たちが提唱する『with FIRE（ウィズファイア）』です。
           </p>
-          <div className="flex gap-4 justify-center">
-            <Link href="/register">
-              <Button size="lg" className="text-lg px-8">
-                今すぐ参加する
-              </Button>
-            </Link>
+          {PREPARING && (
+            <p className="inline-block rounded-full bg-primary/10 text-primary text-sm font-bold px-4 py-1.5 mb-6">
+              🔥 現在準備中｜オープンの先行案内は公式LINEで
+            </p>
+          )}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            {PREPARING ? (
+              <a href={LINE_URL} target="_blank" rel="noopener noreferrer">
+                <Button size="lg" className="text-lg px-8">
+                  LINEで先行案内を受け取る
+                </Button>
+              </a>
+            ) : (
+              <Link href="/register">
+                <Button size="lg" className="text-lg px-8">
+                  今すぐ参加する
+                </Button>
+              </Link>
+            )}
             <Link href="#features">
               <Button variant="outline" size="lg" className="text-lg px-8">
                 詳しく見る
@@ -146,36 +160,64 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Pricing */}
+      {/* Pricing（準備中モードでは価格を出さずLINE先行案内に差し替え） */}
       <section id="pricing" className="py-16 md:py-24 bg-muted/40">
         <div className="container mx-auto px-4">
           <h2 className="text-2xl md:text-3xl font-bold text-center mb-12">
-            料金プラン
+            {PREPARING ? "オープン準備中" : "料金プラン"}
           </h2>
           <div className="max-w-md mx-auto">
             <Card className="border-primary shadow-lg">
               <CardContent className="p-8 text-center">
-                <h3 className="text-xl font-bold mb-2">メンバーシップ</h3>
-                <div className="flex items-baseline justify-center gap-1 mb-4">
-                  <span className="text-4xl font-bold">¥5,980</span>
-                  <span className="text-muted-foreground">/ 月</span>
-                </div>
-                <ul className="text-left space-y-3 mb-8">
-                  {benefits.map((benefit) => (
-                    <li key={benefit} className="flex items-start gap-2 text-sm">
-                      <CheckCircle className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                      <span>{benefit}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Link href="/register">
-                  <Button size="lg" className="w-full text-lg">
-                    今すぐ参加する
-                  </Button>
-                </Link>
-                <p className="text-xs text-muted-foreground mt-4">
-                  いつでもキャンセル可能です
-                </p>
+                {PREPARING ? (
+                  <>
+                    <h3 className="text-xl font-bold mb-2">いま、準備しています🔥</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed mb-6">
+                      中身が固まったら、公式LINEで一番先にお知らせします。
+                      「ちょっと気になる」という方は、登録して待っていてもらえたら嬉しいです。
+                    </p>
+                    <ul className="text-left space-y-3 mb-8">
+                      {benefits.map((benefit) => (
+                        <li key={benefit} className="flex items-start gap-2 text-sm">
+                          <CheckCircle className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                          <span>{benefit}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <a href={LINE_URL} target="_blank" rel="noopener noreferrer">
+                      <Button size="lg" className="w-full text-lg">
+                        LINEで先行案内を受け取る
+                      </Button>
+                    </a>
+                    <p className="text-xs text-muted-foreground mt-4">
+                      質問や「こんなの欲しい」も、LINEで気軽にどうぞ
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <h3 className="text-xl font-bold mb-2">メンバーシップ</h3>
+                    <div className="flex items-baseline justify-center gap-1 mb-4">
+                      <span className="text-4xl font-bold">¥5,980</span>
+                      <span className="text-muted-foreground">/ 月</span>
+                    </div>
+                    <ul className="text-left space-y-3 mb-8">
+                      {benefits.map((benefit) => (
+                        <li key={benefit} className="flex items-start gap-2 text-sm">
+                          <CheckCircle className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                          <span>{benefit}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <Link href="/register">
+                      <Button size="lg" className="w-full text-lg">
+                        今すぐ参加する
+                      </Button>
+                    </Link>
+                    <p className="text-xs text-muted-foreground mt-4">
+                      いつでもキャンセル可能です
+                    </p>
+                  </>
+                )}
               </CardContent>
             </Card>
           </div>

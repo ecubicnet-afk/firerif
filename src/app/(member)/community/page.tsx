@@ -6,10 +6,11 @@ const COMMUNITY_BETA_FREE = process.env.COMMUNITY_BETA_FREE === "true";
 const DISCORD_URL = process.env.NEXT_PUBLIC_DISCORD_URL || "#";
 
 // ローンチ時の部活3つ（2026-05-25確定・まず3つで開始→徐々に増やす）
+// ★2026-06-01決定の改名をアプリに反映（2026-07-13）: 個別株部→お金の勉強部（投資助言表現の排除・Discordと統一）
 const clubs = [
   { emoji: "🏦", name: "節約部", desc: "固定費見直し・家計簿シェア" },
   { emoji: "💼", name: "副業部", desc: "入金力アップ・副収入づくり" },
-  { emoji: "📈", name: "個別株部", desc: "注目銘柄・ポートフォリオ相談" },
+  { emoji: "📈", name: "お金の勉強部", desc: "NISA・iDeCoなど制度と投資の知識をみんなで学ぶ" },
 ];
 
 export default function CommunityPage() {

@@ -8,29 +8,19 @@ import {
   LogOut,
   Menu,
   X,
-  CreditCard,
 } from "lucide-react";
 import { useState } from "react";
 import { navItems } from "./sidebar";
+import { PREPARING, LINE_URL } from "@/lib/launch";
+
+// 「お支払い・解約」ボタンは撤去済み（2026-07-13）:
+// 旧実装は閉鎖済みStripeカスタマーポータル(/api/stripe/portal)に接続していた。
+// 本ローンチ時にMOSHの解約手順案内へ差し替えて復活させる（正本=会員アプリ_全体診断_2026-07-13.md A-3）
 
 export function Header() {
   const { data: session, status } = useSession();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isLoading = status === "loading";
-
-  const openBillingPortal = async () => {
-    try {
-      const res = await fetch("/api/stripe/portal", { method: "POST" });
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        alert(data.error || "お支払いページを開けませんでした");
-      }
-    } catch {
-      alert("お支払いページを開けませんでした");
-    }
-  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -59,14 +49,6 @@ export function Header() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={openBillingPortal}
-              >
-                <CreditCard className="h-4 w-4 mr-1" />
-                お支払い・解約
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
                 onClick={() => signOut({ callbackUrl: "/" })}
               >
                 <LogOut className="h-4 w-4 mr-1" />
@@ -80,9 +62,15 @@ export function Header() {
                   ログイン
                 </Button>
               </Link>
-              <Link href="/register">
-                <Button size="sm">今すぐ参加</Button>
-              </Link>
+              {PREPARING ? (
+                <a href={LINE_URL} target="_blank" rel="noopener noreferrer">
+                  <Button size="sm">LINEで先行案内</Button>
+                </a>
+              ) : (
+                <Link href="/register">
+                  <Button size="sm">今すぐ参加</Button>
+                </Link>
+              )}
             </>
           )}
         </nav>
@@ -130,12 +118,6 @@ export function Header() {
                 </Link>
               )}
               <button
-                className="block px-2 py-1 text-sm w-full text-left"
-                onClick={openBillingPortal}
-              >
-                お支払い・解約
-              </button>
-              <button
                 className="block px-2 py-1 text-sm text-destructive"
                 onClick={() => signOut({ callbackUrl: "/" })}
               >
@@ -151,13 +133,25 @@ export function Header() {
               >
                 ログイン
               </Link>
-              <Link
-                href="/register"
-                className="block px-2 py-1 text-sm text-primary font-medium"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                今すぐ参加
-              </Link>
+              {PREPARING ? (
+                <a
+                  href={LINE_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block px-2 py-1 text-sm text-primary font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  LINEで先行案内
+                </a>
+              ) : (
+                <Link
+                  href="/register"
+                  className="block px-2 py-1 text-sm text-primary font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  今すぐ参加
+                </Link>
+              )}
             </>
           )}
         </div>

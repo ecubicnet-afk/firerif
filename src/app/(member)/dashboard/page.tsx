@@ -2,7 +2,6 @@
 
 import { useSession } from "next-auth/react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import {
   BookMarked,
@@ -12,8 +11,6 @@ import {
   Sparkles,
   TrendingUp,
   Users,
-  CreditCard,
-  ArrowRight,
 } from "lucide-react";
 import { DashboardSummary } from "@/components/dashboard/DashboardSummary";
 
@@ -29,27 +26,12 @@ const quickLinks = [
   { href: "/assets", label: "資産管理", desc: "ポートフォリオ", icon: TrendingUp },
 ];
 
-// お支払い・解約ポータル（外部）。未設定時は Stripe カスタマーポータルにフォールバック
-const BILLING_PORTAL_URL = process.env.NEXT_PUBLIC_BILLING_PORTAL_URL || "";
+// 「お支払い・解約」カードは撤去済み（2026-07-13）:
+// 旧実装は閉鎖済みStripeカスタマーポータル(/api/stripe/portal)に接続していた。
+// 本ローンチ時にMOSHの解約手順案内へ差し替えて復活させる（正本=会員アプリ_全体診断_2026-07-13.md A-3）
 
 export default function DashboardPage() {
   const { data: session } = useSession();
-
-  async function handleManageBilling() {
-    if (BILLING_PORTAL_URL) {
-      window.open(BILLING_PORTAL_URL, "_blank", "noopener,noreferrer");
-      return;
-    }
-    try {
-      const res = await fetch("/api/stripe/portal", { method: "POST" });
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      }
-    } catch {
-      alert("エラーが発生しました");
-    }
-  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
@@ -104,24 +86,6 @@ export default function DashboardPage() {
         </CardContent>
       </Card>
 
-      {/* お支払い・解約 */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <CreditCard className="h-5 w-5 text-muted-foreground" />
-            お支払い・解約
-          </CardTitle>
-          <CardDescription>
-            お支払い方法の変更や解約は、外部の安全なポータルで行えます。
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button variant="outline" onClick={handleManageBilling}>
-            お支払い・解約ページへ
-            <ArrowRight className="ml-1 h-4 w-4" />
-          </Button>
-        </CardContent>
-      </Card>
     </div>
   );
 }

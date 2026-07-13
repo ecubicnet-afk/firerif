@@ -59,12 +59,13 @@ function BudgetSummaryContent() {
 
   const [entries, setEntries] = useState<BudgetEntry[]>([]);
   const [prevEntries, setPrevEntries] = useState<BudgetEntry[]>([]);
-  const [loading, setLoading] = useState(true);
+  // 読み込み済みの年月キーから loading を導出（effect内の同期setStateを避ける）
+  const [loadedKey, setLoadedKey] = useState("");
   const [memo, setMemo] = useState("");
+  const loading = loadedKey !== `${year}-${month}`;
 
   useEffect(() => {
     let active = true;
-    setLoading(true);
     const p = prevYM(year, month);
     Promise.all([fetchMonth(year, month), fetchMonth(p.year, p.month)])
       .then(([cur, prev]) => {
@@ -72,7 +73,7 @@ function BudgetSummaryContent() {
         setEntries(cur);
         setPrevEntries(prev);
       })
-      .finally(() => active && setLoading(false));
+      .finally(() => active && setLoadedKey(`${year}-${month}`));
     return () => {
       active = false;
     };
